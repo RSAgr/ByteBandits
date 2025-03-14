@@ -1,4 +1,4 @@
-#### ByteBandits
+# ByteBandits
 
 ## Various options to select parameters like :
 ### Purpose: (e.g., Escrow, NFT, DAO, DeFi, Voting) 
