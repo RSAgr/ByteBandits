@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "algoDev.helloWorld",
-        "title": "Hello World"
+        "command": "algorand-dev-assistant.openPanel",
+      "title": "Open Algorand Contract Panel"
       }
     ]
   },
