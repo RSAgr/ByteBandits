@@ -1,0 +1,9 @@
+# For PyTeal smart contracts
+pyteal==0.24.1
+beaker-pyteal==1.0.0
+
+# For Transformers/NLP
+transformers==4.40.1
+datasets==2.18.0
+tokenizers==0.19.1
+torch==2.2.2
