@@ -12,7 +12,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
 # Sample input instruction
-instruction = "Write a PyTeal clear state program."  #  use a known training example first
+instruction = "generate: Write a PyTeal clear state program."  #  use a known training example first
 print("Instruction:\n", instruction)
 
 # Tokenize input
@@ -24,8 +24,8 @@ print("Token 203 is:", tokenizer.decode([203]))
 
 # Generate output
 with torch.no_grad():
-    outputs = model.generate(**inputs, max_length=128, do_sample=True, top_k=50, top_p=0.95)
-
+    #outputs = model.generate(**inputs, max_length=128, do_sample=True, top_k=50, top_p=0.95)
+    outputs = model.generate(**inputs, max_length=1024, do_sample=True, temperature=0.9, num_return_sequences=3)
 
 # Debug: print raw output token IDs
 print(" Raw Output IDs:\n", outputs)

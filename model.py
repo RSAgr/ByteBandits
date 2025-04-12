@@ -46,10 +46,10 @@ trainer = Seq2SeqTrainer(
 # Train!
 trainer.train()
 
-print("Saving model...")
-trainer.save_model("codet5_algorand")
-tokenizer.save_pretrained("codet5_algorand")
-print("Saved to ./codet5_algorand")
+# print("Saving model...")
+# trainer.save_model("codet5_algorand")
+# tokenizer.save_pretrained("codet5_algorand")
+# print("Saved to ./codet5_algorand")
 
 
 
