@@ -2,7 +2,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import torch
 
 # Load model & tokenizer
-model_path = "./codet5-algorand"
+model_path = "./codet5Algorand"
 tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
 model = AutoModelForSeq2SeqLM.from_pretrained(model_path, local_files_only=True)
 
