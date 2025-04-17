@@ -35,7 +35,8 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
         <option>PyTeal</option>
       </select>
 
-      
+      <label for="customPrompt">Custom Description (optional):</label>
+      <textarea id="chat" rows="3" cols="50" placeholder="Explain the purpose of the contract"></textarea>
       
 
       <button id="generate">Generate</button>
