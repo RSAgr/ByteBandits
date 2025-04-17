@@ -56,10 +56,10 @@ export function activate(context: vscode.ExtensionContext) {
             panel.webview.onDidReceiveMessage(
                 async (message) => {
                     if (message.command === 'generate') {
-                        const { purpose, type, lang } = message;
+                        const { purpose, type, lang, chat } = message;
 
-                        const prompt = `generate: ${purpose} ${type} in ${lang}`;
-                        vscode.window.showInformationMessage(`⏳ Generating ${lang} contract for ${purpose} (${type})...`);
+                        const prompt = `generate: ${chat} with purpose ${purpose} and type as ${type} in ${lang}`;
+                        vscode.window.showInformationMessage(`⏳ Generating ${lang} contract for ${chat} with purpose as ${purpose} (${type})...`);
 
                         try {
                             const output = await callModel(prompt);
