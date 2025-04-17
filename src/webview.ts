@@ -35,6 +35,9 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
         <option>PyTeal</option>
       </select>
 
+      
+      
+
       <button id="generate">Generate</button>
       <div id="output" style="margin-top: 20px; padding: 10px; background: #f4f4f4; border-radius: 5px;">
   <p id="output-text" style="white-space: pre-wrap; color: black ; font-family: monospace;">
