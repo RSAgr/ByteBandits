@@ -5,9 +5,10 @@ document.getElementById('generate').addEventListener('click', () => {
     const type = document.getElementById('type').value;
     const lang = document.getElementById('lang').value;
     const chat = document.getElementById('chat').value;
+    const output = document.getElementById('output-text').value;
     
 
-    document.getElementById('output-text').innerText = "🚀 Hello from the backends!";
+    document.getElementById('output-text').innerText = "Generating Contract...!";
     
 
     // Send data to extension backend
@@ -16,6 +17,15 @@ document.getElementById('generate').addEventListener('click', () => {
 
   });
   
+  document.getElementById('deploy').addEventListener('click', () => {
+
+    vscode.postMessage({ command: 'deploy', 
+      code: document.getElementById('output-text').textContent, 
+      contractType: document.getElementById('type').value ,
+      lang: document.getElementById('lang').value });
+    document.getElementById('output-text').innerText = "Deploying contract...!";
+});
+
 
   window.addEventListener('message', (event) => {
     const message = event.data;

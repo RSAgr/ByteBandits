@@ -3,6 +3,73 @@ import { getWebviewContent } from './webview';
 import { PythonShell } from 'python-shell';
 import * as path from 'path';
 
+// async function deploySmartContract(): Promise<string> {
+//     return new Promise((resolve, reject) => {
+//         const scriptPath = path.resolve(__dirname, '../deploy.py');
+
+//         const pyshell = new PythonShell(scriptPath, {
+//             mode: 'json',
+//             pythonOptions: ['-u'],
+//         });
+
+//         // You could pass deployment parameters if needed
+//         pyshell.send({ action: 'deploy',  });
+
+//         pyshell.on('message', (message) => {
+//             if (message.response) {
+//                 resolve(message.response);
+//             } else if (message.error) {
+//                 reject(new Error(message.error));
+//             } else {
+//                 reject(new Error("Unexpected response from deploy script"));
+//             }
+//         });
+
+//         pyshell.on('error', (err) => reject(err));
+//         pyshell.on('stderr', (stderr) => console.error("Deploy stderr:", stderr));
+//         pyshell.end((err) => {
+//             if (err) 
+//                 {reject(err);
+//                 };
+//         });
+//     });
+// }
+
+export function deploySmartContract(code: string, contractType: string, lang: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const scriptPath = path.resolve(__dirname, '../deploy.py');
+
+        const pyshell = new PythonShell(scriptPath, {
+            mode: 'json',
+            pythonOptions: ['-u'],
+        });
+
+        pyshell.send({
+            action: 'deploy',
+            code,
+            contract_type: contractType,
+            lang
+        });
+
+        pyshell.on('message', (message) => {
+            if (message.response) {
+                resolve(message.response);
+            } else if (message.error) {
+                reject(new Error(message.error));
+            } else {
+                reject(new Error("Unexpected response from deploy script"));
+            }
+        });
+
+        pyshell.on('error', (err) => reject(err));
+        pyshell.on('stderr', (stderr) => console.error("Deploy stderr:", stderr));
+        pyshell.end((err) => {
+            if (err) {reject(err);};
+        });
+    });
+}
+
+
 export function callModel(prompt: string): Promise<string> {
     return new Promise((resolve, reject) => {
         //const scriptPath = "D:\Extension\algoDev\codet5Algorand";
@@ -67,6 +134,18 @@ export function activate(context: vscode.ExtensionContext) {
                         } catch (err: any) {
                             panel.webview.postMessage({ command: 'error', error: err.message });
                         }
+                    }
+                    if (message.command === 'deploy'){
+                        try {
+                            vscode.window.showInformationMessage("🚀 Deploying smart contract...");
+                            
+                            // Call a deploySmartContract function (you’ll define this next)
+                            const deployResult = await deploySmartContract(message.code, message.contractType, message.lang);
+                  
+                            panel.webview.postMessage({ command: 'displayOutput', output: deployResult });
+                          } catch (err: any) {
+                            panel.webview.postMessage({ command: 'error', error: err.message });
+                          }
                     }
                 },
                 undefined,

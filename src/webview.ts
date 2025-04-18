@@ -40,6 +40,7 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
       
 
       <button id="generate">Generate</button>
+      <button id="deploy" style="margin-left: 10px;">Deploy</button>
       <div id="output" style="margin-top: 20px; padding: 10px; background: #f4f4f4; border-radius: 5px;">
   <p id="output-text" style="white-space: pre-wrap; color: black ; font-family: monospace;">
     Output will be displayed here
