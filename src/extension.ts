@@ -147,6 +147,19 @@ export function activate(context: vscode.ExtensionContext) {
                             panel.webview.postMessage({ command: 'error', error: err.message });
                           }
                     }
+                    if (message.command === 'retry'){
+                        const { purpose, type, lang, chat, output } = message;
+
+                        const prompt = `retry: improve or modify the following contract:\n${output}\n\nOriginal request: ${chat} with purpose ${purpose}, type ${type}, language ${lang}`;
+                        vscode.window.showInformationMessage(`⏳ Generating ${lang} contract for ${chat} with purpose as ${purpose} (${type})...`);
+
+                        try {
+                            const output = await callModel(prompt);
+                            panel.webview.postMessage({ command: 'displayOutput', output });
+                        } catch (err: any) {
+                            panel.webview.postMessage({ command: 'error', error: err.message });
+                        }
+                    }
                 },
                 undefined,
                 context.subscriptions

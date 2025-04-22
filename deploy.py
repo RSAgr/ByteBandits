@@ -5,7 +5,11 @@ from algosdk import account, transaction
 from algosdk.v2client import algod
 from algosdk.transaction import StateSchema
 from pyteal import compileTeal, Mode
-from algosdk.logic import get_application_address, get_logicsig_address
+from algosdk.logic import get_application_address
+from algosdk import logic
+from algosdk.logic import address as logic_address
+
+
 
 import sys
 import json
@@ -17,7 +21,6 @@ load_dotenv()
 ALGOD_TOKEN = os.getenv("TESTNET_ALGOD_TOKEN")
 ALGOD_URL = os.getenv("TESTNET_ALGOD_URL")
 ALGOD_CLIENT = algod.AlgodClient(ALGOD_TOKEN, ALGOD_URL)
-
 ADDRESS = os.getenv("ADDRESS")
 PRIVATE_KEY = os.getenv("PRIVATE_KEY")
 
@@ -58,9 +61,11 @@ def deploy_stateful_approval_clear(approval_teal, clear_teal):
 # === DEPLOY STATELESS ===
 def deploy_stateless(teal_source):
     logic = compile_teal_source(teal_source)
-    logic_address = get_logicsig_address(logic)
+    return logic_address(logic)
+    #return account.address_from_program(logic)
 
-    return logic_address
+    #logic_address = logic.address(logic)
+    #return logic_address
 
 
 # === MAIN DEPLOY FUNCTION ===
@@ -109,8 +114,8 @@ def deploy_contract(code, contract_type, lang):
 if __name__ == "__main__":
     for line in sys.stdin:
         try:
-            request = json.loads(line)
-
+            #request = json.loads(line)
+            request = { "action": "deploy", "code": "from pyteal import *\ndef logic(): return And(Txn.receiver() == Addr(\"ZZNVNYBXZBQP22BNCZFMSMNT6ZGDOPWWUOJBXRGPLT7DKRD5GKBAWJ4NAM\"), Txn.amount() > Int(0))", "contract_type": "stateless", "lang": "pyteal" }
             if request.get("action") == "deploy":
                 code = request.get("code")
                 contract_type = request.get("contract_type")
