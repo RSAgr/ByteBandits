@@ -55,6 +55,7 @@ if __name__ == "__main__":
                 outputs = model.generate(**inputs, max_length=1024, do_sample=True, temperature=0.9, num_return_sequences=1)
 
             result = tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
 
             print(json.dumps({ "response": result }))
             sys.stdout.flush()
