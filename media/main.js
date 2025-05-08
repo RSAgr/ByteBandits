@@ -20,8 +20,8 @@ document.getElementById('copy-output').addEventListener('click', () => {
   
 document.getElementById('generate').addEventListener('click', () => {
     const purpose = document.getElementById('purpose').value;
-    const type = document.getElementById('type').value;
-    const lang = document.getElementById('lang').value;
+    const type = "stateful";
+    const lang = "Python";
     const chat = document.getElementById('chat').value;
 
     document.getElementById('output-text').innerText = "Generating Contract...!";
@@ -37,19 +37,19 @@ document.getElementById('deploy').addEventListener('click', () => {
     vscode.postMessage({
         command: 'deploy',
         code: document.getElementById('output-text').textContent,
-        contractType: document.getElementById('type').value,
-        lang: document.getElementById('lang').value
+        contractType: "stateless",
+        lang: "Python"
     });
     document.getElementById('output-text').innerText = "Deploying contract...!";
 });
 
 document.getElementById('retry').addEventListener('click', () => {
     // Block retry if still disabled
-    if (document.getElementById('retry').disabled) return;
+    if (document.getElementById('retry').disabled) {return;};
 
     const purpose = document.getElementById('purpose').value;
-    const type = document.getElementById('type').value;
-    const lang = document.getElementById('lang').value;
+    const type = "stateless";
+    const lang = "Python";
     const chat = document.getElementById('chat').value;
     const output = document.getElementById('output-text').value;
 

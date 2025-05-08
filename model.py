@@ -1,12 +1,20 @@
 from datasets import load_dataset
 from transformers import AutoTokenizer
 from tokenizers import Tokenizer
+import json
 from transformers import AutoModelForSeq2SeqLM, Seq2SeqTrainer, Seq2SeqTrainingArguments, DataCollatorForSeq2Seq
 
+# with open('./data/opip.jsonl', 'r', encoding='utf-8') as f:
+#     for i, line in enumerate(f):
+#         data = json.loads(line)
+#         if "Output" in data:
+#             print(f"Line {i}: has 'Output' key")
 
-dataset = load_dataset("json", data_files={"train": "./data/ipop.jsonl"})
 
+dataset = load_dataset("json", data_files={"train": "./data/opip.jsonl"})
+dataset["train"] = dataset["train"].select(range(101, 1000))   # Limit to 1000 examples for faster training
 # No need to split
+# print(dataset["train"][0])
 
 # Load model and tokenizer
 model_name = "Salesforce/codet5-small"
@@ -14,9 +22,9 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
 # Tokenize
-def preprocess(example):
-    inputs = tokenizer(example["instruction"], padding="max_length", truncation=True, max_length=128)
-    targets = tokenizer(example["output"], padding="max_length", truncation=True, max_length=512)
+def preprocess(examples):
+    inputs = tokenizer(examples["instruction"], padding="max_length", truncation=True, max_length=128)
+    targets = tokenizer(examples["output"], padding="max_length", truncation=True, max_length=512)
     inputs["labels"] = targets["input_ids"]
     return inputs
 

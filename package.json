@@ -15,7 +15,7 @@
     "commands": [
       {
         "command": "algorand-dev-assistant.openPanel",
-      "title": "Open Algorand Contract Panel"
+        "title": "Open Algorand Contract Panel"
       }
     ]
   },
@@ -34,16 +34,23 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.99.0",
+    "@types/axios": "^0.9.36",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/python-shell": "^0.4.2",
+    "@types/vscode": "^1.99.0",
     "@typescript-eslint/eslint-plugin": "^8.28.0",
     "@typescript-eslint/parser": "^8.28.0",
-    "eslint": "^9.23.0",
-    "esbuild": "^0.25.1",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.8.2",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
+    "@vscode/test-electron": "^2.4.1",
+    "esbuild": "^0.25.1",
+    "eslint": "^9.23.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "node-fetch": "^3.3.2",
+    "python-shell": "^5.0.0"
   }
 }
