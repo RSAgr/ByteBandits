@@ -10,7 +10,7 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
 <head>
   <meta charset="UTF-8" />
   <link href="${styleUri}" rel="stylesheet" />
-  <title>Algorand Contract Builder</title>
+  <title>Algorand Builder</title>
   <style>
     body {
       font-family: sans-serif;
@@ -85,11 +85,12 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
   </style>
 </head>
 <body>
-  <h2>Algorand Contract Generator</h2>
+  <h2>AlgoGenerator for Degens</h2>
   <div class="container">
     <div class="form-section">
       <label for="purpose">Purpose:</label>
       <select id="purpose">
+        <option>-Select-</option>
         <option>Escrow</option>
         <option>NFT</option>
         <option>DAO</option>
@@ -97,17 +98,7 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
         <option>DeFi</option>
       </select>
 
-      <label for="type">Contract Type:</label>
-      <select id="type">
-        <option>Stateful</option>
-        <option>Stateless</option>
-      </select>
 
-      <label for="lang">Language:</label>
-      <select id="lang">
-        <option>TEAL</option>
-        <option>PyTeal</option>
-      </select>
 
       <label for="customPrompt">Description:</label>
       <textarea id="chat" rows="4" placeholder="Explain the purpose of the contract"></textarea>
