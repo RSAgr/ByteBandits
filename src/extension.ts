@@ -100,7 +100,7 @@ export function deploySmartContract(code: string, contractType: string, lang: st
 export function callModel(prompt: string): Promise<string> {
     return new Promise((resolve, reject) => {
         //const scriptPath = "D:\Extension\algoDev\codet5Algorand";
-        const scriptPath = path.resolve(__dirname, '../inference.py');
+        const scriptPath = path.resolve(__dirname, '../inferenceLora.py');
 
         const pyshell = new PythonShell(scriptPath, {
             mode: 'json',

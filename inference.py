@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 
 model_path = Path(__file__).parent / "codet5-algorand"
+#model_path = Path(__file__).parent / "lora-output"
 tokenizer = AutoTokenizer.from_pretrained(str(model_path), local_files_only=True)
 model = AutoModelForSeq2SeqLM.from_pretrained(str(model_path), local_files_only=True)
 
