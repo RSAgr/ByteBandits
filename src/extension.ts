@@ -152,7 +152,7 @@ export function activate(context: vscode.ExtensionContext) {
                     if (message.command === 'generate') {
                         const { purpose, type, lang, chat } = message;
                         
-                        const prompt = `generate: ${chat} with purpose ${purpose} and type as ${type} in ${lang}`;
+                        const prompt = `generate: ${chat} in Python language`;
                 
                         vscode.window.showInformationMessage(`⏳ Generating ${lang} contract for ${chat} with purpose as ${purpose} (${type})...`);
 
