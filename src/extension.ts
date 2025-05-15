@@ -5,7 +5,7 @@ import * as path from 'path';
 
 async function getDropdownSuggestions(prompt: string): Promise<string[]> {
     return new Promise((resolve, reject) => {
-        const scriptPath = path.resolve(__dirname, '../inferenceLora.py');
+        const scriptPath = path.resolve(__dirname, '../inferenceDropDown.py');
 
         const pyshell = new PythonShell(scriptPath, {
             mode: 'json',
@@ -152,7 +152,7 @@ export function activate(context: vscode.ExtensionContext) {
                     if (message.command === 'generate') {
                         const { purpose, type, lang, chat } = message;
                         
-                        const prompt = `input: ${chat} \n output:`;
+                        const prompt = `instruction: ${chat}\noutput:`;
                 
                         vscode.window.showInformationMessage(`⏳ Generating ${lang} contract for ${chat} with purpose as ${purpose} (${type})...`);
 
@@ -177,8 +177,9 @@ export function activate(context: vscode.ExtensionContext) {
                     }
                     if (message.command === 'retry'){
                         const { purpose, type, lang, chat, output } = message;
-
-                        const prompt = `retry: improve or modify the following contract:\n${output}\n\nOriginal request: ${chat} with purpose ${purpose}, type ${type}, language ${lang}`;
+                        const prompt = `instruction: Improve or modify the following Python contract based on the original request.\n\noutput:\n${output}\n\nOriginal instruction: ${chat}`;
+                        //const prompt = `retry: improve or modify the following contract:\n${output}\n\nOriginal request: ${chat} in python language`;
+                        //const prompt = `retry: improve or modify the following contract:\n${output}\n\nOriginal request: ${chat} in python language`;
                         vscode.window.showInformationMessage(`⏳ Generating Python contract for ${chat} with purpose as ${purpose} (${type})...`);
 
                         try {
