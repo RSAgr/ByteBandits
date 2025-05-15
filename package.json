@@ -9,7 +9,10 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+  "onLanguage:python",
+  "onCommand:algorand-dev-assistant.openPanel"
+],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
