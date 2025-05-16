@@ -1,3 +1,5 @@
+############This file is not been used, go to train.py#################
+
 from datasets import load_dataset
 from transformers import AutoTokenizer
 from tokenizers import Tokenizer
