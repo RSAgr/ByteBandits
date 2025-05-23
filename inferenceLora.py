@@ -59,24 +59,56 @@ inputs = tokenizer(prompt, return_tensors="pt").to(device)
 
 # Generate output
 try:
+    # Create a more specific prompt for code generation
+    system_prompt = """You are a helpful AI assistant that generates Python code. 
+    When given an instruction, respond with only the code that implements it.
+    Do not include any explanations or additional text.
+    Example:
+    Instruction: generate a function to add two numbers
+    Response:
+    def add(a, b):
+        return a + b
+    """
+    
+    full_prompt = f"{system_prompt}\n\nInstruction: {prompt}\nResponse:\n"
+    
+    # Tokenize the new prompt
+    inputs = tokenizer(full_prompt, return_tensors="pt").to(device)
+    
     with torch.no_grad():
         output = model.generate(
             **inputs,
-            max_new_tokens=128,
-            do_sample=True,
-            temperature=0.5,
-            top_k=20,
-            top_p=0.7,
+            max_new_tokens=256,  # Increased for code generation
+            do_sample=False,     # Use greedy decoding for more deterministic output
+            temperature=0.7,     # Slight randomness
+            top_k=50,            # Consider top 50 tokens
+            top_p=0.9,           # Nucleus sampling
             pad_token_id=tokenizer.eos_token_id,
-            # **inputs,
-            # max_new_tokens=200,
-            # do_sample=False,
-            # pad_token_id=tokenizer.eos_token_id,
+            no_repeat_ngram_size=2,  # Prevent repetition
         )
+    
+    # Decode and clean up the output
     completion = tokenizer.decode(output[0], skip_special_tokens=True)
+    
+    # Remove the input prompt from the output
+    completion = completion[len(full_prompt):].strip()
+    
+    # Ensure we only get the code block if it exists
+    if '```python' in completion:
+        code = completion.split('```python')[1].split('```')[0].strip()
+        completion = code
+    elif '```' in completion:
+        code = completion.split('```')[1].split('```')[0].strip()
+        if code.startswith('python'):
+            code = code[6:].strip()
+        completion = code
+    
     json.dump({"response": completion}, sys.stdout)
+    
 except Exception as e:
-    json.dump({"error": f"Inference error: {str(e)}"}, sys.stdout)
+    error_msg = f"Inference error: {str(e)}"
+    print(f"Error: {error_msg}", file=sys.stderr)
+    json.dump({"error": error_msg}, sys.stdout)
     sys.exit(1)
 
 # import sys

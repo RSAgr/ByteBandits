@@ -81,6 +81,22 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
       white-space: pre-wrap;
       color: black;
       font-family: monospace;
+      background: #eaeaea;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    #error-text {
+      color: red;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    #loading-text {
+      color: #007acc;
+      font-style: italic;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -98,8 +114,6 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
         <option>DeFi</option>
       </select>
 
-
-
       <label for="customPrompt">Description:</label>
       <textarea id="chat" rows="4" placeholder="Explain the purpose of the contract"></textarea>
     </div>
@@ -112,18 +126,77 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
   </div>
 
   <div id="output" style="position: relative; margin-top: 20px; padding: 10px; background: #f4f4f4; border-radius: 5px;">
-  <button 
-    id="copy-output" 
-    style="position: absolute; top: 5px; right: 5px; font-size: 10px; padding: 3px 6px; cursor: pointer;">
-    📋Copy
-  </button>
-  <p id="output-text" style="white-space: pre-wrap; color: black; font-family: monospace; margin-top: 20px;">
-    Output will be displayed here
-  </p>
-</div>
+    <button 
+      id="copy-output" 
+      style="position: absolute; top: 5px; right: 5px; font-size: 10px; padding: 3px 6px; cursor: pointer;">
+      📋Copy
+    </button>
+    <pre id="output-text" style="white-space: pre-wrap; color: black; font-family: monospace; margin-top: 20px;">
+      Output will be displayed here
+    </pre>
+    <div id="error-text" style="display:none;"></div>
+    <div id="loading-text" style="display:none;">Loading...</div>
+  </div>
 
-
-  <script src="${scriptUri}"></script>
+  <script>
+    const vscode = acquireVsCodeApi();
+    const outputText = document.getElementById('output-text');
+    const errorText = document.getElementById('error-text');
+    const loadingText = document.getElementById('loading-text');
+    document.getElementById('generate').onclick = function() {
+      errorText.style.display = 'none';
+      loadingText.style.display = 'block';
+      outputText.textContent = '';
+      vscode.postMessage({
+        command: 'generate',
+        purpose: document.getElementById('purpose').value,
+        chat: document.getElementById('chat').value,
+        type: 'Stateful',
+        lang: 'Python'
+      });
+    };
+    document.getElementById('deploy').onclick = function() {
+      errorText.style.display = 'none';
+      loadingText.style.display = 'block';
+      outputText.textContent = '';
+      vscode.postMessage({
+        command: 'deploy',
+        code: outputText.textContent,
+        contractType: 'Stateful',
+        lang: 'Python'
+      });
+    };
+    document.getElementById('retry').onclick = function() {
+      errorText.style.display = 'none';
+      loadingText.style.display = 'block';
+      outputText.textContent = '';
+      vscode.postMessage({
+        command: 'retry',
+        purpose: document.getElementById('purpose').value,
+        chat: document.getElementById('chat').value,
+        type: 'Stateful',
+        lang: 'Python',
+        output: outputText.textContent
+      });
+    };
+    window.addEventListener('message', event => {
+      const message = event.data;
+      loadingText.style.display = 'none';
+      if (message.command === 'displayOutput') {
+        errorText.style.display = 'none';
+        outputText.textContent = message.output;
+        document.getElementById('retry').disabled = false;
+      } else if (message.command === 'error') {
+        errorText.style.display = 'block';
+        errorText.textContent = message.error;
+        outputText.textContent = '';
+        document.getElementById('retry').disabled = true;
+      }
+    });
+    document.getElementById('copy-output').onclick = function() {
+      navigator.clipboard.writeText(outputText.textContent);
+    };
+  </script>
 </body>
 </html>
 
