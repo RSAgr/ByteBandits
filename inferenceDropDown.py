@@ -17,7 +17,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory where infer
 lora_path = os.path.join(script_dir, "lora-output")
 model = PeftModel.from_pretrained(model, lora_path)
 
-
 # import os
 # lora_path = os.path.abspath("./lora-output")
 # model = PeftModel.from_pretrained(model, lora_path)
@@ -43,12 +42,12 @@ try:
     with torch.no_grad():
         output = model.generate(
             **inputs,
-            max_new_tokens=200,
+            max_new_tokens=128,
             do_sample=False,
-            temperature=0.0,
-            top_k=50,
-            top_p=0.95,
-            pad_token_id=tokenizer.eos_token_id,
+            temperature=0.9,
+            #top_k=50,
+            #top_p=0.95,
+            #pad_token_id=tokenizer.eos_token_id,
         )
     decoded = tokenizer.decode(output[0], skip_special_tokens=True)
     new_text = decoded[len(prompt):].strip()

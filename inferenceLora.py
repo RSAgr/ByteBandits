@@ -22,11 +22,9 @@ model = PeftModel.from_pretrained(model, lora_path)
 # lora_path = os.path.abspath("./lora-output")
 # model = PeftModel.from_pretrained(model, lora_path)
 
-# Move model to CPU or GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
 
-# Read prompt from stdin
 raw_input = sys.stdin.read()
 try:
     data = json.loads(raw_input)
@@ -63,17 +61,17 @@ inputs = tokenizer(prompt, return_tensors="pt").to(device)
 try:
     with torch.no_grad():
         output = model.generate(
+            **inputs,
+            max_new_tokens=128,
+            do_sample=True,
+            temperature=0.5,
+            top_k=20,
+            top_p=0.7,
+            pad_token_id=tokenizer.eos_token_id,
             # **inputs,
             # max_new_tokens=200,
             # do_sample=False,
-            # temperature=0.0,
-            # top_k=50,
-            # top_p=0.95,
             # pad_token_id=tokenizer.eos_token_id,
-            **inputs,
-            max_new_tokens=200,
-            do_sample=False,
-            pad_token_id=tokenizer.eos_token_id,
         )
     completion = tokenizer.decode(output[0], skip_special_tokens=True)
     json.dump({"response": completion}, sys.stdout)
