@@ -2,28 +2,14 @@ import * as vscode from 'vscode';
 import { getWebviewContent } from './webview';
 import { PythonShell } from 'python-shell';
 import * as path from 'path';
-import * as fs from 'fs';
-
-// Utility function to get Python path
-function getPythonPath(): string {
-    // First try the virtual environment
-    const venvPath = path.join(__dirname, '..', '.venv', 'bin', 'python');
-    if (fs.existsSync(venvPath)) {
-        return venvPath;
-    }
-    // Fall back to system Python
-    return 'python3';
-}
 
 async function getDropdownSuggestions(prompt: string): Promise<string[]> {
     return new Promise((resolve, reject) => {
         const scriptPath = path.resolve(__dirname, '../inferenceDropDown.py');
         const pyshell = new PythonShell(scriptPath, {
             mode: 'json',
-            pythonPath: getPythonPath(),
             pythonOptions: ['-u'],
         });
-        console.log(`[Python] Using interpreter: ${getPythonPath()}`);
         console.log('📩 [Dropdown] Fetching dropdown suggestions for:', prompt);
         pyshell.send({ prompt });
         pyshell.on('message', (message) => {
@@ -49,10 +35,8 @@ async function getInlineCompletion(prompt: string): Promise<string> {
         const scriptPath = path.resolve(__dirname, '../inferenceLora.py');
         const pyshell = new PythonShell(scriptPath, {
             mode: 'json',
-            pythonPath: getPythonPath(),
             pythonOptions: ['-u'],
         });
-        console.log(`[Python] Using interpreter: ${getPythonPath()}`);
         console.log('[Inline] Sending prefix to model:', prompt);
         pyshell.send({ prompt });
         pyshell.on('message', (message) => {
@@ -82,10 +66,8 @@ export function deploySmartContract(code: string, contractType: string, lang: st
 
         const pyshell = new PythonShell(scriptPath, {
             mode: 'json',
-            pythonPath: getPythonPath(),
             pythonOptions: ['-u'],
         });
-        console.log(`[Python] Using interpreter: ${getPythonPath()}`);
 
         pyshell.send({
             action: 'deploy',
@@ -119,10 +101,8 @@ export function callModel(prompt: string): Promise<string> {
 
         const pyshell = new PythonShell(scriptPath, {
             mode: 'json',
-            pythonPath: getPythonPath(),
             pythonOptions: ['-u'],
         });
-        console.log(`[Python] Using interpreter: ${getPythonPath()}`);
 
         pyshell.send({ prompt });
 
@@ -171,12 +151,8 @@ export function activate(context: vscode.ExtensionContext) {
                         const prompt = `instruction: ${chat}\noutput:`;
                         vscode.window.showInformationMessage(`⏳ Generating ${lang} contract for ${chat} with purpose as ${purpose} (${type})...`);
                         try {
-                            var code = await callModel(prompt);
-                            // Format the output as a code block with the specified language
-                            const formattedOutput = `\`\`\`${message.lang || ''}
-${code}
-\`\`\``;
-                            panel.webview.postMessage({ command: 'displayOutput', output: formattedOutput });
+                            var output = await callModel(prompt);                    
+                            panel.webview.postMessage({ command: 'displayOutput', output });
                         } catch (err: any) {
                             panel.webview.postMessage({ command: 'error', error: err.message });
                         }
@@ -195,12 +171,8 @@ ${code}
                         const prompt = `instruction: Improve or modify the following Python contract based on the original request.\n\noutput:\n${output}\n\nOriginal instruction: ${chat}`;
                         vscode.window.showInformationMessage(`⏳ Generating Python contract for ${chat} with purpose as ${purpose} (${type})...`);
                         try {
-                            const code = await callModel(prompt);
-                            // Format the output as a code block with the specified language
-                            const formattedOutput = `\`\`\`${message.lang || ''}
-${code}
-\`\`\``;
-                            panel.webview.postMessage({ command: 'displayOutput', output: formattedOutput });
+                            const output = await callModel(prompt);
+                            panel.webview.postMessage({ command: 'displayOutput', output });
                         } catch (err: any) {
                             panel.webview.postMessage({ command: 'error', error: err.message });
                         }
@@ -240,44 +212,23 @@ ${code}
     const dropdownProvider = vscode.languages.registerCompletionItemProvider(
         { language: 'python', scheme: 'file' },
         {
-            async provideCompletionItems(document, position, token, context) {
-                const linePrefix = document.lineAt(position).text.slice(0, position.character);
-                console.log('[Dropdown] Triggered with context:', { 
-                    linePrefix,
-                    triggerCharacter: context?.triggerCharacter,
-                    position: position
-                });
-
-                // Check if we're after a dot or at the start of a word
-                const isDotTrigger = linePrefix.endsWith('.');
-                const isWordStart = /\w$/.test(linePrefix);
-                
-                if (!isDotTrigger && !isWordStart) {
-                    console.log('[Dropdown] Not at a trigger position');
-                    return [];
-                }
-
+            async provideCompletionItems(document, position) {
+                const textBefore = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
+                console.log('[Dropdown] Triggered for textBefore:', textBefore);
                 try {
-                    const textBefore = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
-                    console.log('[Dropdown] Getting suggestions for textBefore:', textBefore);
-                    
                     const suggestions = await getDropdownSuggestions(textBefore);
-                    console.log('[Dropdown] Received suggestions:', suggestions);
-                    
                     return suggestions.map((sugg, index) => {
                         const item = new vscode.CompletionItem(sugg, vscode.CompletionItemKind.Snippet);
-                        item.sortText = String(index).padStart(5, '0'); // Maintain order with padding
+                        item.sortText = String(index); // Maintain order
                         return item;
                     });
                 } catch (err: any) {
-                    console.error('[Dropdown] Error:', err);
                     vscode.window.showErrorMessage('[Dropdown] Completion Error: ' + err.message);
                     return [];
                 }
             }
         },
-        '.', // Trigger on dot
-        ' '  // Also trigger on space
+        '.' // Trigger dropdown after dot
     );
     context.subscriptions.push(dropdownProvider);
 }

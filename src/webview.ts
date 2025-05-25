@@ -138,11 +138,23 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
     <div id="loading-text" style="display:none;">Loading...</div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script>
     const vscode = acquireVsCodeApi();
     const outputText = document.getElementById('output-text');
     const errorText = document.getElementById('error-text');
     const loadingText = document.getElementById('loading-text');
+    
+    // Configure marked to use highlight.js for syntax highlighting
+    marked.setOptions({
+      highlight: function(code, lang) {
+        const language = lang || 'plaintext';
+        return code; // Return as plain text for now
+      },
+      langPrefix: 'language-', // Use language-* class for syntax highlighting
+      breaks: true,
+      gfm: true
+    });
     document.getElementById('generate').onclick = function() {
       errorText.style.display = 'none';
       loadingText.style.display = 'block';
@@ -184,7 +196,8 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
       loadingText.style.display = 'none';
       if (message.command === 'displayOutput') {
         errorText.style.display = 'none';
-        outputText.textContent = message.output;
+        // Render markdown and set as HTML
+        outputText.innerHTML = marked.parse(message.output);
         document.getElementById('retry').disabled = false;
       } else if (message.command === 'error') {
         errorText.style.display = 'block';

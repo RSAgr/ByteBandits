@@ -60,17 +60,39 @@ inputs = tokenizer(prompt, return_tensors="pt").to(device)
 # Generate output
 try:
     # Create a more specific prompt for code generation
-    system_prompt = """You are a helpful AI assistant that generates Python code. 
+    system_prompt = """You are a helpful AI coding assistant that generates Python code. 
     When given an instruction, respond with only the code that implements it.
     Do not include any explanations or additional text.
-    Example:
+    
+    Example 1:
     Instruction: generate a function to add two numbers
     Response:
     def add(a, b):
         return a + b
+        
+    Example 2:
+    Instruction: print hello world
+    Response:
+    print("Hello, World!")
+    
+    Example 3:
+    Instruction: check if a number is prime
+    Response:
+    def is_prime(n):
+        if n <= 1:
+            return False
+        for i in range(2, int(n ** 0.5) + 1):
+            if n % i == 0:
+                return False
+        return True
     """
     
-    full_prompt = f"{system_prompt}\n\nInstruction: {prompt}\nResponse:\n"
+    # Format the prompt more clearly
+    instruction = prompt.lower().strip()
+    if not instruction.startswith('generate') and not instruction.startswith('write'):
+        instruction = f'generate code to {instruction}'
+    
+    full_prompt = f"{system_prompt}\n\nInstruction: {instruction}\nResponse:\n"
     
     # Tokenize the new prompt
     inputs = tokenizer(full_prompt, return_tensors="pt").to(device)
@@ -78,13 +100,17 @@ try:
     with torch.no_grad():
         output = model.generate(
             **inputs,
-            max_new_tokens=256,  # Increased for code generation
-            do_sample=False,     # Use greedy decoding for more deterministic output
-            temperature=0.7,     # Slight randomness
-            top_k=50,            # Consider top 50 tokens
-            top_p=0.9,           # Nucleus sampling
+            max_new_tokens=300,           # Increased for code generation
+            do_sample=True,              # Enable sampling for better quality
+            temperature=0.3,             # Lower temperature for more focused output
+            top_k=30,                    # Consider top 30 tokens
+            top_p=0.95,                  # Nucleus sampling with 95% probability mass
+            num_beams=1,                 # Use greedy search for now
             pad_token_id=tokenizer.eos_token_id,
-            no_repeat_ngram_size=2,  # Prevent repetition
+            no_repeat_ngram_size=3,      # Prevent 3-gram repetition
+            early_stopping=True,         # Stop generation when complete
+            length_penalty=1.5,          # Encourage longer, more complete code
+            repetition_penalty=1.2,      # Discourage repetition
         )
     
     # Decode and clean up the output
