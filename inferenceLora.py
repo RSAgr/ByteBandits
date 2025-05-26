@@ -3,8 +3,12 @@ import json
 import os
 import google.generativeai as genai
 
-# === Load Google Gemini API key ===
-GOOGLE_API_KEY = "AIzaSyBkyHKIW_LmTQr029mky-9ImgDQm7i6grs"
+from dotenv import load_dotenv  
+# Configure your API key
+load_dotenv()  # Load environment variables from .env file
+
+GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
+
 if not GOOGLE_API_KEY:
     print("Error: GEMINI_API_KEY environment variable not set", file=sys.stderr)
     json.dump({"error": "GEMINI_API_KEY environment variable not set"}, sys.stdout)
