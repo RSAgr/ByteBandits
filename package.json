@@ -1,5 +1,5 @@
 {
-  "name": "algoDev",
+  "name": "algo-dev-assistant",
   "displayName": "algo-dev-assistant",
   "description": "AI Assistant to help AlgoDEVs to develop in the Algorand Ecosystem",
   "version": "0.0.1",
@@ -9,10 +9,6 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-  "onLanguage:python",
-  "onCommand:algorand-dev-assistant.openPanel"
-],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -55,5 +51,8 @@
     "axios": "^1.9.0",
     "node-fetch": "^3.3.2",
     "python-shell": "^5.0.0"
-  }
+  },
+  "activationEvents": [
+    "onCommand:algorand-dev-assistant.openPanel"
+  ]
 }

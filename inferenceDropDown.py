@@ -34,30 +34,91 @@ except Exception as e:
     json.dump({"error": f"Invalid input format: {str(e)}"}, sys.stdout)
     sys.exit(1)
 
-# Tokenize and prepare input
-inputs = tokenizer(prompt, return_tensors="pt").to(device)
+# Common Python completions for dropdown
+COMMON_COMPLETIONS = [
+    "import ",
+    "def ",
+    "class ",
+    "for ",
+    "while ",
+    "if ",
+    "else:",
+    "elif ",
+    "try:",
+    "except ",
+    "finally:",
+    "with ",
+    "return ",
+    "yield ",
+    "from ",
+    "as ",
+    "lambda ",
+    "assert ",
+    "raise ",
+    "pass",
+    "break",
+    "continue"
+]
 
-# Generate output
+# Tokenize and prepare input
 try:
+    # Check if we should use common completions (for empty or very short prompts)
+    if len(prompt.strip()) < 3:
+        json.dump({"suggestions": COMMON_COMPLETIONS}, sys.stdout)
+        sys.exit(0)
+    
+    # For longer prompts, use the model
+    system_prompt = """You are a helpful Python code completion assistant. 
+    Provide ONLY code completions (no explanations) for the given code context.
+    Return each completion on a new line. Only include the completion text, not the prompt.
+    """
+    
+    full_prompt = f"{system_prompt}\n\nCode context: {prompt}\nCompletions:\n"
+    
+    inputs = tokenizer(full_prompt, return_tensors="pt").to(device)
+    
     with torch.no_grad():
         output = model.generate(
             **inputs,
-            max_new_tokens=128,
-            do_sample=False,
-            temperature=0.9,
-            #top_k=50,
-            #top_p=0.95,
-            #pad_token_id=tokenizer.eos_token_id,
+            max_new_tokens=50,
+            do_sample=True,
+            temperature=0.7,
+            top_k=30,
+            top_p=0.9,
+            num_return_sequences=5,
+            pad_token_id=tokenizer.eos_token_id,
+            no_repeat_ngram_size=2,
         )
-    decoded = tokenizer.decode(output[0], skip_special_tokens=True)
-    new_text = decoded[len(prompt):].strip()
-
-    # Turn the result into suggestions (1 per line, filter empty ones)
-    suggestions = [line.strip() for line in new_text.split("\n") if line.strip()]
-
+    
+    # Decode and process suggestions
+    completions = set()
+    for out in output:
+        text = tokenizer.decode(out, skip_special_tokens=True)
+        # Extract only the new completion part
+        completion = text[len(full_prompt):].strip()
+        # Split by newlines and clean up
+        for line in completion.split('\n'):
+            line = line.strip()
+            if line and len(line) > 1:  # Filter out very short completions
+                completions.add(line)
+    
+    # If we didn't get good completions, fall back to common ones
+    if not completions:
+        completions = set(COMMON_COMPLETIONS)
+    
+    # Convert to list and limit number of suggestions
+    suggestions = list(completions)[:8]  # Max 8 suggestions
+    
+    # Ensure we always return at least some completions
+    if not suggestions:
+        suggestions = COMMON_COMPLETIONS[:5]
+    
     json.dump({"suggestions": suggestions}, sys.stdout)
+    
 except Exception as e:
-    json.dump({"error": f"Inference error: {str(e)}"}, sys.stdout)
+    print(f"Error in dropdown completion: {str(e)}", file=sys.stderr)
+    # Fallback to common completions on error
+    json.dump({"suggestions": COMMON_COMPLETIONS[:5]}, sys.stdout)
     sys.exit(1)
 
     # Decode and extract new text only (removing echoed prompt)
