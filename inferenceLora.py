@@ -17,7 +17,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory where infer
 lora_path = os.path.join(script_dir, "lora-output")
 model = PeftModel.from_pretrained(model, lora_path)
 
-
 # import os
 # lora_path = os.path.abspath("./lora-output")
 # model = PeftModel.from_pretrained(model, lora_path)
