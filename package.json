@@ -1,14 +1,17 @@
 {
   "name": "algo-dev-assistant",
-  "displayName": "algo-dev-assistant",
-  "description": "AI Assistant to help AlgoDEVs to develop in the Algorand Ecosystem",
+  "displayName": "Algorand Dev Assistant",
+  "description": "AI Assistant to help AlgoDEVs to develop in the Algorand Ecosystem with smart code completion and suggestions",
   "version": "0.0.1",
   "engines": {
-    "vscode": "^1.99.0"
+    "vscode": "^1.85.0"
   },
   "categories": [
+    "Programming Languages",
+    "Snippets",
     "Other"
   ],
+
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -16,7 +19,22 @@
         "command": "algorand-dev-assistant.openPanel",
         "title": "Open Algorand Contract Panel"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Algorand Dev Assistant",
+      "properties": {
+        "algorand-dev-assistant.enableDropdownSuggestions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable dropdown code suggestions"
+        },
+        "algorand-dev-assistant.enableInlineCompletions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable inline code completions"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
@@ -48,11 +66,15 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
     "axios": "^1.9.0",
     "node-fetch": "^3.3.2",
-    "python-shell": "^5.0.0"
+    "python-shell": "^5.0.0",
+    "vscode-languageclient": "^8.1.0"
   },
   "activationEvents": [
-    "onCommand:algorand-dev-assistant.openPanel"
+    "onCommand:algorand-dev-assistant.openPanel",
+    "onLanguage:python"
   ]
 }

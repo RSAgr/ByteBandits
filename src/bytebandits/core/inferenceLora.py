@@ -1,21 +1,30 @@
 import sys
 import json
 import torch
+import os
 from transformers import AutoTokenizer, AutoModelForCausalLM
-from peft import PeftModel
+
+# Initialize device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load base model and tokenizer
 base_model = "EleutherAI/gpt-neo-125M"
 tokenizer = AutoTokenizer.from_pretrained(base_model)
-model = AutoModelForCausalLM.from_pretrained(base_model, torch_dtype=torch.float32)
+model = AutoModelForCausalLM.from_pretrained(base_model, torch_dtype=torch.float32).to(device)
 
-# Load LoRA fine-tuned weights
-#model = PeftModel.from_pretrained(model, "./lora-output")
-
-import os
-script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory where inferenceLora.py resides
-lora_path = os.path.join(script_dir, "lora-output")
-model = PeftModel.from_pretrained(model, lora_path)
+# Try to load LoRA fine-tuned weights if available
+try:
+    from peft import PeftModel
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    lora_path = os.path.join(script_dir, "lora-output")
+    
+    if os.path.exists(lora_path):
+        print(f"[INFO] Loading LoRA weights from {lora_path}", file=sys.stderr)
+        model = PeftModel.from_pretrained(model, lora_path).to(device)
+    else:
+        print("[WARNING] LoRA weights not found. Using base model without fine-tuning.", file=sys.stderr)
+except Exception as e:
+    print(f"[WARNING] Could not load LoRA weights: {str(e)}. Using base model.", file=sys.stderr)
 
 
 # import os
@@ -60,38 +69,48 @@ inputs = tokenizer(prompt, return_tensors="pt").to(device)
 # Generate output
 try:
     # Create a more specific prompt for code generation
-    system_prompt = """You are a helpful AI coding assistant that generates Python code. 
-    When given an instruction, respond with only the code that implements it.
-    Do not include any explanations or additional text.
+    system_prompt = """You are a Python code generator that responds only with code.
+    For simple instructions, provide only the exact code needed.
+    Do not include any explanations, comments, or additional text.
     
-    Example 1:
-    Instruction: generate a function to add two numbers
-    Response:
-    def add(a, b):
-        return a + b
-        
-    Example 2:
+    Examples:
+    Instruction: print 5
+    Response: print(5)
+    
+    Instruction: create a function to add two numbers
+    Response: def add(a, b):\n    return a + b
+    
     Instruction: print hello world
-    Response:
-    print("Hello, World!")
+    Response: print("Hello, World!")
     
-    Example 3:
-    Instruction: check if a number is prime
-    Response:
-    def is_prime(n):
-        if n <= 1:
-            return False
-        for i in range(2, int(n ** 0.5) + 1):
-            if n % i == 0:
-                return False
-        return True
+    Important: For simple tasks like printing numbers or strings, 
+    only provide the exact code needed without any additional context.
     """
     
     # Format the prompt more clearly
     instruction = prompt.lower().strip()
-    if not instruction.startswith('generate') and not instruction.startswith('write'):
-        instruction = f'generate code to {instruction}'
     
+    # Handle simple print requests directly
+    if instruction.startswith('print ') or instruction.startswith('display '):
+        # Extract what needs to be printed
+        to_print = instruction.split('print ')[1] if 'print ' in instruction else instruction.split('display ')[1]
+        # Remove any trailing punctuation or whitespace
+        to_print = to_print.strip(' .,!?;:')
+        
+        # For numbers
+        if to_print.isdigit():
+            completion = f"print({to_print})"
+        # For simple strings without spaces
+        elif to_print.replace('_', '').isalnum():
+            completion = f"print('{to_print}')"
+        # For more complex strings
+        else:
+            completion = f'print("{to_print}")'
+            
+        json.dump({"response": completion}, sys.stdout, ensure_ascii=False)
+        sys.exit(0)
+    
+    # For other cases, use the model
     full_prompt = f"{system_prompt}\n\nInstruction: {instruction}\nResponse:\n"
     
     # Tokenize the new prompt
