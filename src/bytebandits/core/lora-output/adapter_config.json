@@ -1,0 +1,14 @@
+{
+  "base_model_name_or_path": "EleutherAI/gpt-neo-125M",
+  "bias": "none",
+  "fan_in_fan_out": false,
+  "inference_mode": true,
+  "lora_alpha": 16,
+  "lora_dropout": 0.05,
+  "r": 8,
+  "target_modules": [
+    "q_proj",
+    "v_proj"
+  ],
+  "task_type": "CAUSAL_LM"
+}
