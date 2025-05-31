@@ -12,7 +12,7 @@ python-dotenv==1.0.1
 transformers==4.40.1
 datasets==2.18.0
 tokenizers==0.19.1
-torch==2.2.2
+torch>=2.2.2
 
 # For web scraping (used in data/webScraping.py)
 beautifulsoup4==4.12.3
