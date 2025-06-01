@@ -154,7 +154,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('algorand-dev-assistant.openPanel', () => {
             const panel = vscode.window.createWebviewPanel(
                 'algorandDev',
-                'Algorand Contract Builder',
+                'Algorand Code Builder',
                 vscode.ViewColumn.One,
                 { enableScripts: true }
             );

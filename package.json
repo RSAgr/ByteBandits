@@ -14,7 +14,7 @@
     "commands": [
       {
         "command": "algorand-dev-assistant.openPanel",
-        "title": "Open Algorand Contract Panel"
+        "title": "Open Algorand Code Generator Panel"
       }
     ]
   },

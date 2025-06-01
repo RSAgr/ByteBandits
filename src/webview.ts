@@ -400,9 +400,9 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
         
         <div class="container">
             <div class="form-section">
-                <label for="purpose">Contract Type</label>
+                <label for="purpose">Code Type</label>
                 <select id="purpose">
-                    <option value="">Select contract type...</option>
+                    <option value="">Select Code type...</option>
                     <option value="Escrow">Escrow Contract</option>
                     <option value="NFT">NFT Minting</option>
                     <option value="DAO">DAO Governance</option>
@@ -411,7 +411,7 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
                     <option value="Custom">Custom Script</option>
                 </select>
 
-                <label for="chat">Contract Description</label>
+                <label for="chat">Problem Description</label>
                 <textarea id="chat" rows="6" placeholder="Describe the functionality you need for your Algorand smart contract..."></textarea>
             </div>
 
