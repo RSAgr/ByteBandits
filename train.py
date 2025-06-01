@@ -13,12 +13,10 @@ import json
 
 # Load model and tokenizer
 # model_name = "deepseek-ai/deepseek-coder-1.3b-base"
-model_name = "EleutherAI/gpt-neo-125M"
+model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 tokenizer.pad_token = tokenizer.eos_token
 model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float32)
-
-
 
 # Enable LoRA
 # peft_config = LoraConfig(
@@ -32,14 +30,28 @@ model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float
 
 from peft import PeftModel, PeftConfig, get_peft_model, LoraConfig, TaskType
 
-peft_path = "./lora-output"
+peft_path = "./trainedModel"
 
-if os.path.exists(peft_path):
-    # ✅ Load existing LoRA adapter (continue training)
+# if os.path.exists(peft_path):
+#     # ✅ Load existing LoRA adapter (continue training)
+#     print("🔁 Loading existing LoRA weights...")
+#     model = PeftModel.from_pretrained(model, peft_path)
+# else:
+#     # 🆕 No existing LoRA adapter found — create a new one
+#     print("🆕 No previous LoRA weights found. Initializing new adapter...")
+#     peft_config = LoraConfig(
+#         task_type=TaskType.CAUSAL_LM,
+#         inference_mode=False,
+#         r=8,
+#         lora_alpha=16,
+#         lora_dropout=0.05,
+#     )
+#     model = get_peft_model(model, peft_config)
+
+if os.path.exists(os.path.join(peft_path, "adapter_config.json")):
     print("🔁 Loading existing LoRA weights...")
     model = PeftModel.from_pretrained(model, peft_path)
 else:
-    # 🆕 No existing LoRA adapter found — create a new one
     print("🆕 No previous LoRA weights found. Initializing new adapter...")
     peft_config = LoraConfig(
         task_type=TaskType.CAUSAL_LM,
@@ -63,20 +75,24 @@ def load_jsonl_dataset(path):
         for ex in lines
     ])
 
-dataset = load_jsonl_dataset(r"data\ipop.jsonl")
-#dataset = dataset.select(range(2000,2000)) 
+dataset = load_jsonl_dataset(r"data\samples.jsonl")
+dataset = dataset.select(range(0,10)) 
 
 # Tokenize and add labels
 def tokenize(example):
-    tokenized = tokenizer(example["text"], truncation=True, padding="max_length", max_length=1024)
+    tokenized = tokenizer(example["text"], truncation=True, padding="max_length", max_length=512)
+    #tokenized = tokenizer(example["text"], truncation=True, padding="max_length", max_length=512)
     tokenized["labels"] = tokenized["input_ids"].copy()  # Required for loss computation
     return tokenized
 
 tokenized_dataset = dataset.map(tokenize, batched=True)
 
+print(tokenized_dataset[0])
+
+
 # Training config
 training_args = TrainingArguments(
-    output_dir="./lora-output",
+    output_dir="./trainedModel",
     per_device_train_batch_size=1,
     num_train_epochs=10,
     save_steps=100,
@@ -97,5 +113,7 @@ trainer = Trainer(
     tokenizer=tokenizer,
     data_collator=DataCollatorForLanguageModeling(tokenizer, mlm=False),
 )
+logging_steps=1,
+logging_first_step=True,
 
 trainer.train()
