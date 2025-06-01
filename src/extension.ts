@@ -6,7 +6,8 @@ import * as fs from 'fs';
 
 function getPythonPath(): string {
     const venvPath = path.join(__dirname, '..', '.venv', 'bin', 'python');
-    return fs.existsSync(venvPath) ? venvPath : 'python'; //change to python3 if needed
+    console.log('Using Python path:', venvPath);
+    return venvPath;
 }
 
 async function getDropdownSuggestions(prompt: string): Promise<string[]> {
