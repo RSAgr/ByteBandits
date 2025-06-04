@@ -8,9 +8,6 @@ from pyteal import compileTeal, Mode
 from algosdk.logic import get_application_address
 from algosdk import logic
 from algosdk.logic import address as logic_address
-
-
-
 import sys
 import json
 
@@ -26,13 +23,39 @@ PRIVATE_KEY = os.getenv("PRIVATE_KEY")
 
 
 # === COMPILE TEAL ON CHAIN ===
+# def compile_teal_source(teal_source):
+#     compile_response = ALGOD_CLIENT.compile(teal_source)
+#     return base64.b64decode(compile_response['result'])
+
+# def compile_teal_source(teal_source):
+    
+#     try:
+#         compile_response = ALGOD_CLIENT.compile(teal_source)
+#         base64_code = compile_response.get('result')
+#         if base64_code is None:
+#             raise Exception("No 'result' in compile response: " + str(compile_response))
+#         return base64.b64decode(base64_code)
+#     except Exception as e:
+#         raise Exception(f"TEAL compilation failed: {str(e)}")
+
 def compile_teal_source(teal_source):
-    compile_response = ALGOD_CLIENT.compile(teal_source)
-    return base64.b64decode(compile_response['result'])
+    try:
+        compile_response = ALGOD_CLIENT.compile(teal_source)
+        base64_code = compile_response.get('result')
+        if base64_code is None:
+            raise Exception("No 'result' in compile response: " + str(compile_response))
+
+        # Fix padding if needed (base64 strings must be divisible by 4)
+        padded_base64 = base64_code + '=' * (-len(base64_code) % 4)
+
+        return base64.b64decode(padded_base64)
+    except Exception as e:
+        raise Exception(f"TEAL compilation failed: {str(e)}")
 
 
 # === DEPLOY STATEFUL ===
 def deploy_stateful_approval_clear(approval_teal, clear_teal):
+    print("APPROVAL TEAL:\n", approval_teal)
     approval_prog = compile_teal_source(approval_teal)
     clear_prog = compile_teal_source(clear_teal)
 
@@ -76,8 +99,10 @@ def deploy_contract(code, contract_type, lang):
             exec(code, namespace)
 
             if contract_type.lower() == "stateful":
-                approval_fn = namespace.get("approval")
-                clear_fn = namespace.get("clear")
+                approval_fn = namespace.get("approval_program")
+                #approval_fn = "from pyteal import *\ndef approval_program():\n counter_key = Bytes(\"counter\")\n @Subroutine(TealType.uint64)\n def initialize_counter(): return App.globalPut(counter_key, Int(0))\n @Subroutine(TealType.uint64)\n def increment_counter(): current_count = App.globalGet(counter_key); return App.globalPut(counter_key, current_count + Int(1))\n program = Cond([Txn.application_id() == Int(0), Seq([initialize_counter(), Return(Int(1))])],[Txn.on_completion() == OnComplete.NoOp, Seq([increment_counter(), Return(Int(1))])])\n return program"
+                #clear_fn = "from pyteal import *\ndef clear_state_program(): return Return(Int(1))"
+                clear_fn = namespace.get("clear_state_program")
                 if not approval_fn or not clear_fn:
                     return "❌ Error: PyTeal must define 'approval()' and 'clear()' functions"
 
@@ -109,17 +134,21 @@ def deploy_contract(code, contract_type, lang):
         return "❌ Error: Invalid type or language"
 
     except Exception as e:
+        #return f"Deployment done with App ID"
         return f"❌ Deployment failed: {str(e)}"
 
 if __name__ == "__main__":
     for line in sys.stdin:
         try:
-            #request = json.loads(line)
-            request = { "action": "deploy", "code": "from pyteal import *\ndef logic(): return And(Txn.receiver() == Addr(\"ZZNVNYBXZBQP22BNCZFMSMNT6ZGDOPWWUOJBXRGPLT7DKRD5GKBAWJ4NAM\"), Txn.amount() > Int(0))", "contract_type": "stateless", "lang": "pyteal" }
+            request = json.loads(line)
+            #request = { "action": "deploy", "code": "from pyteal import *\ndef approval_program():\n counter_key = Bytes(\"counter\")\n @Subroutine(TealType.uint64)\n def initialize_counter(): return App.globalPut(counter_key, Int(0))\n @Subroutine(TealType.uint64)\n def increment_counter(): current_count = App.globalGet(counter_key); return App.globalPut(counter_key, current_count + Int(1))\n program = Cond([Txn.application_id() == Int(0), Seq([initialize_counter(), Return(Int(1))])],[Txn.on_completion() == OnComplete.NoOp, Seq([increment_counter(), Return(Int(1))])])\n return program\ndef clear_state_program(): return Return(Int(1))\nif __name__ == __main__: print(compileTeal(approval_program(), Mode.Application, version=6))), Txn.amount() > Int(0))", "contract_type": "stateful", "lang": "pyteal" }
+            #request = { "action": "deploy", "code": "from pyteal import *\ndef logic(): return And(Txn.receiver() == Addr(\"ZZNVNYBXZBQP22BNCZFMSMNT6ZGDOPWWUOJBXRGPLT7DKRD5GKBAWJ4NAM\"), Txn.amount() > Int(0))", "contract_type": "stateless", "lang": "pyteal" }
             if request.get("action") == "deploy":
                 code = request.get("code")
                 contract_type = request.get("contract_type")
-                lang = request.get("lang")
+                lang = "pyteal"
+                #contract_type = request.get("contract_type")
+                #lang = request.get("lang")
 
                 if not all([code, contract_type, lang]):
                     raise ValueError("Missing one or more required fields: code, contract_type, lang")
