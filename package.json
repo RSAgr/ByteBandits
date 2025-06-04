@@ -35,9 +35,9 @@
   "devDependencies": {
     "@types/axios": "^0.9.36",
     "@types/mocha": "^10.0.10",
-    "@types/node": "20.x",
+    "@types/node": "^20.17.57",
     "@types/python-shell": "^0.4.2",
-    "@types/vscode": "^1.99.0",
+    "@types/vscode": "^1.100.0",
     "@typescript-eslint/eslint-plugin": "^8.28.0",
     "@typescript-eslint/parser": "^8.28.0",
     "@vscode/test-cli": "^0.0.10",
