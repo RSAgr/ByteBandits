@@ -2,7 +2,7 @@ import sys
 import json
 import os
 import google.generativeai as genai
-
+import re
 from dotenv import load_dotenv
 
 # Configure your API key
@@ -72,7 +72,7 @@ except Exception as e:
     sys.exit(1)
 
 # === Build System Prompt and Full Prompt ===
-system_prompt = """You are a helpful AI coding assistant that generates Python code.
+system_prompt = """You are a helpful AI coding assistant for Algorand (blockchain) that generates Python code. If anyone asks for anything apart from python code, simply deny with an apology message.
 When given an instruction, respond with only the code that implements it.
 Do not include any explanations or additional text.
 """
@@ -115,6 +115,8 @@ if all_samples:
             context_examples_str += f"\nContext Example {i+1}:\n"
             context_examples_str += f"Instruction: {sample.get('instruction', 'N/A')}\n"
             context_examples_str += f"Response:\n{sample.get('output', 'N/A')}\n"
+            # if(i==0 or i==1):
+            #     print(context_examples_str)
     else:
         print("No matching samples found for context injection.", file=sys.stderr)
 
@@ -128,14 +130,20 @@ try:
     completion = response.text.strip()
 
     # Clean output if inside code blocks
-    if '```python' in completion:
-        code = completion.split('```python')[1].split('```')[0].strip()
-        completion = code
-    elif '```' in completion:
-        code = completion.split('```')[1].split('```')[0].strip()
-        if code.startswith('python'):
-            code = code[6:].strip()
-        completion = code
+    # if '```python' in completion:
+    #     code = completion.split('```python')[1].split('```')[0].strip()
+    #     completion = code
+    # elif '```Python' in completion:
+    #     code = completion.split('```Python')[1].split('```')[0].strip()
+    #     completion = code
+    # elif '```' in completion:
+    #     code = completion.split('```')[1].split('```')[0].strip()
+    #     if code.startswith('python'):
+    #         code = code[6:].strip()
+    #     completion = code
+    match = re.search(r"```(?:[Pp]ython)?\s*([\s\S]+?)```", completion)
+    if match:
+        completion = match.group(1).strip()
     json.dump({"response": completion}, sys.stdout)
 
 except Exception as e:
