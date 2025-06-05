@@ -5,10 +5,9 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 function getPythonPath(): string {
-    // const venvPath = path.join(__dirname, '..', '.venv', 'bin', 'python');
-    const venvPath = path.join(__dirname, '..', '.venv', 'Lib', 'site-packages'); // For Windows
-    console.log(`[Python] Checking for virtual environment at: ${venvPath}`);
-    return fs.existsSync(venvPath) ? venvPath : 'python'; //change to python3 if needed
+    const venvPath = path.join(__dirname, '..', '.venv', 'bin', 'python');
+    console.log('Using Python path:', venvPath);
+    return venvPath;
 }
 
 async function getDropdownSuggestions(prompt: string): Promise<string[]> {
