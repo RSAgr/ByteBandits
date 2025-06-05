@@ -1,21 +1,26 @@
-# For PyTeal smart contracts
+numpy<2.0
+
+# Smart contracts and Algorand blockchain
 pyteal==0.23.0
 beaker-pyteal==1.0.0
-
-# For Algorand SDK and blockchain interaction
 py-algorand-sdk==2.0.0
 
-# For environment variable management
+# Environment variable management
 python-dotenv==1.0.1
 
-# For Transformers/NLP
-transformers==4.40.1
+# Transformers/NLP and model fine-tuning
+transformers>=4.36.0
 datasets==2.18.0
-tokenizers==0.19.1
-torch>=2.2.2
+tokenizers==0.12.1
+torch==2.2.2
+peft==0.10.0
 
-# For web scraping (used in data/webScraping.py)
+# Web scraping
 beautifulsoup4==4.12.3
 requests==2.31.0
 
-peft==0.10.0
+# IBM Generative AI (if you use genai/ibm-generative-ai)
+ibm-generative-ai==3.0.0
+
+# Setuptools (for pkg_resources)
+setuptools>=68.0.0

@@ -1,0 +1,29 @@
+numpy
+
+# Smart contracts and Algorand blockchain
+pyteal
+beaker-pyteal
+py-algorand-sdk
+
+# Environment variable management
+python-dotenv
+
+# Transformers/NLP and model fine-tuning
+transformers
+datasets
+tokenizers
+torch
+peft
+
+# Web scraping
+beautifulsoup4
+requests
+
+# IBM Generative AI (if you use genai/ibm-generative-ai)
+ibm-generative-ai
+
+# Setuptools (for pkg_resources)
+setuptools
+
+# Optional: For distributed training and performance optimization
+accelerate
