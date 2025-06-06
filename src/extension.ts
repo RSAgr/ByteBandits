@@ -4,10 +4,16 @@ import { PythonShell } from 'python-shell';
 import * as path from 'path';
 import * as fs from 'fs';
 
+// function getPythonPath(): string {
+//     const venvPath = path.join(__dirname, '..', '.venv', 'bin', 'python');
+//     console.log('Using Python path:', venvPath);
+//     return venvPath;
+// }
+
 function getPythonPath(): string {
-    const venvPath = path.join(__dirname, '..', '.venv', 'bin', 'python');
-    console.log('Using Python path:', venvPath);
-    return venvPath;
+    // const pythonCommand = process.platform === 'win32' ? 'python' : 'python3';
+    // return pythonCommand;
+    return "python"
 }
 
 async function getDropdownSuggestions(prompt: string): Promise<string[]> {
@@ -131,8 +137,9 @@ export function callModel(prompt: string): Promise<string> {
 
         pyshell.on('message', (message) => {
             if (message.response) {
-                resolve(message.response);
-            } else if (message.error) {
+                resolve(message.context_chunks);
+            } 
+            else if (message.error) {
                 reject(new Error(message.error));
             } else {
                 reject(new Error("Unexpected response format from model"));
@@ -171,7 +178,7 @@ export function activate(context: vscode.ExtensionContext) {
                     try {
                         const code = await callModel(prompt);
                         const formattedOutput = `\`\`\`${message.lang || ''}\n${code}\n\`\`\``;
-                        panel.webview.postMessage({ command: 'displayOutput', output: formattedOutput });
+                        panel.webview.postMessage({ command: 'displayOutput', output: code });
                     } catch (err: any) {
                         panel.webview.postMessage({ command: 'error', error: err.message });
                     }
@@ -180,7 +187,7 @@ export function activate(context: vscode.ExtensionContext) {
                 if (message.command === 'deploy') {
                     try {
                         vscode.window.showInformationMessage('🚀 Deploying smart contract...');
-                        const deployResult = await deploySmartContract(message.code, message.contractType, message.lang);
+                        const deployResult = await deploySmartContract(message.code, "stateful", "pyteal");
                         panel.webview.postMessage({ command: 'displayOutput', output: deployResult });
                     } catch (err: any) {
                         panel.webview.postMessage({ command: 'error', error: err.message });

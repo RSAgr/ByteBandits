@@ -175,32 +175,46 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
                 box-shadow: none;
             }
 
-            #output {
+            .results-wrapper {
                 width: 90%;
                 max-width: 1200px;
+                margin-bottom: 30px;
+                overflow-x: auto;
+            }
+
+            .results-container {
+                display: flex;
+                gap: 20px;
+                min-width: fit-content;
+                padding-bottom: 10px;
+            }
+
+            .result-box {
                 background: var(--card-bg);
                 border: 1px solid var(--border-color);
                 border-radius: 8px;
                 padding: 25px;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
                 position: relative;
-                margin-bottom: 30px;
+                min-width: 400px;
+                max-width: 600px;
+                flex: 1;
             }
 
-            #output-header {
+            .result-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 15px;
             }
 
-            #output-title {
+            .result-title {
                 font-weight: 500;
                 color: var(--accent-color-light);
                 font-size: 1.1em;
             }
 
-            #output-text {
+            .result-content {
                 white-space: pre;
                 color: var(--text-color);
                 background: var(--code-bg);
@@ -214,6 +228,8 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
                 min-height: 50px;
                 tab-size: 4;
                 margin: 0;
+                max-height: 400px;
+                overflow-y: auto;
             }
 
             #error-text {
@@ -233,16 +249,15 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
                 display: none;
                 align-items: center;
                 justify-content: center;
-                gap: 20px; /* This adds space between loader and text */
+                gap: 20px;
                 font-weight: 500;
             }
 
             .loading-message {
-                margin-left: 10px; /* Additional spacing if needed */
+                margin-left: 10px;
                 color: #3794ff;
             }
 
-            /* HTML: <div class="loader"></div> */
             .loader {
                 width: 40px;
                 aspect-ratio: 1;
@@ -270,7 +285,7 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
                 100% {inset:0    ;transform: rotate(90deg)}
             }
 
-            #copy-output {
+            .copy-btn {
                 background: var(--border-color);
                 color: white;
                 border: none;
@@ -284,7 +299,7 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
                 gap: 6px;
             }
 
-            #copy-output:hover {
+            .copy-btn:hover {
                 background: var(--accent-color);
                 color: white;
             }
@@ -355,6 +370,44 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
                 color: #d16969;
             }
 
+            /* Custom scrollbar */
+            .results-wrapper::-webkit-scrollbar {
+                height: 8px;
+            }
+
+            .results-wrapper::-webkit-scrollbar-track {
+                background: var(--border-color);
+                border-radius: 4px;
+            }
+
+            .results-wrapper::-webkit-scrollbar-thumb {
+                background: var(--accent-color);
+                border-radius: 4px;
+            }
+
+            .results-wrapper::-webkit-scrollbar-thumb:hover {
+                background: var(--accent-color-light);
+            }
+
+            .result-content::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+            }
+
+            .result-content::-webkit-scrollbar-track {
+                background: var(--border-color);
+                border-radius: 4px;
+            }
+
+            .result-content::-webkit-scrollbar-thumb {
+                background: var(--accent-color);
+                border-radius: 4px;
+            }
+
+            .result-content::-webkit-scrollbar-thumb:hover {
+                background: var(--accent-color-light);
+            }
+
             @media (max-width: 900px) {
                 .container {
                     grid-template-columns: 1fr;
@@ -369,6 +422,10 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
                 
                 button {
                     flex: 1;
+                }
+
+                .result-box {
+                    min-width: 300px;
                 }
             }
 
@@ -390,8 +447,9 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
                     padding: 15px;
                 }
                 
-                #output {
+                .result-box {
                     padding: 20px;
+                    min-width: 280px;
                 }
             }
         </style>
@@ -443,29 +501,48 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
             </div>
         </div>
 
-        <div id="output">
-            <div id="output-header">
-                <div id="output-title">Generated Code</div>
-                <button id="copy-output">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                    </svg>
-                    Copy
-                </button>
+        <div class="results-wrapper">
+            <div class="results-container">
+                <div class="result-box" id="output-box">
+                    <div class="result-header">
+                        <div class="result-title">Generated Code</div>
+                        <button class="copy-btn" id="copy-output">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                    <pre class="result-content" id="output-text"></pre>
+                    <div id="error-text"></div>
+                    <div id="loading-text">
+                        <span class="loader"></span>
+                        <span class="loading-message">Processing request...</span>
+                    </div>        
+                </div>
+
+                <div class="result-box" id="context-box">
+                    <div class="result-header">
+                        <div class="result-title">Context Chunks</div>
+                        <button class="copy-btn" id="copy-context">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                    <pre class="result-content" id="context-text">Context chunks used for generation will appear here...</pre>
+                </div>
             </div>
-            <pre id="output-text"></pre>
-            <div id="error-text"></div>
-            <div id="loading-text">
-                <span class="loader"></span>
-                <span class="loading-message">Processing request...</span>
-            </div>        
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <script>
             const vscode = acquireVsCodeApi();
             const outputText = document.getElementById('output-text');
+            const contextText = document.getElementById('context-text');
             const errorText = document.getElementById('error-text');
             const loadingText = document.getElementById('loading-text');
             const generateBtn = document.getElementById('generate');
@@ -473,7 +550,8 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
             const retryBtn = document.getElementById('retry');
             const purposeSelect = document.getElementById('purpose');
             const chatInput = document.getElementById('chat');
-            const copyBtn = document.getElementById('copy-output');
+            const copyOutputBtn = document.getElementById('copy-output');
+            const copyContextBtn = document.getElementById('copy-context');
 
             // Set loading state
             function setLoading(isLoading) {
@@ -536,18 +614,25 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
                 });
             });
 
-            // Handle messages from extension
-            window.addEventListener('message', event => {
+           window.addEventListener('message', event => {
                 const message = event.data;
                 setLoading(false);
 
                 if (message.command === 'displayOutput') {
                     outputText.style.display = 'block';
                     outputText.innerHTML = message.output;
+                    
+                    // Display context chunks if available
+                    if (message.context_chunks) {
+                        contextText.textContent = message.context_chunks;
+                    } else {
+                        contextText.textContent = "No relevant context chunks found.";
+                    }
+                    
                     errorText.style.display = 'none';
                     deployBtn.disabled = false;
                     retryBtn.disabled = false;
-                } 
+                }  
                 else if (message.command === 'error') {
                     outputText.style.display = 'block';
                     errorText.style.display = 'block';
@@ -558,11 +643,11 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
                 updateButtonStates();
             });
 
-            // Copy button functionality
-            copyBtn.addEventListener('click', () => {
+            // Copy output button functionality
+            copyOutputBtn.addEventListener('click', () => {
                 const textToCopy = outputText.textContent;
                 navigator.clipboard.writeText(textToCopy).then(() => {
-                    copyBtn.innerHTML = 
+                    copyOutputBtn.innerHTML = 
                         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
                             '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>' +
                             '<polyline points="22 4 12 14.01 9 11.01"></polyline>' +
@@ -570,7 +655,29 @@ export function getWebviewContent(webview: vscode.Webview, extensionUri: vscode.
                         'Copied!';
                         
                     setTimeout(() => {
-                        copyBtn.innerHTML = 
+                        copyOutputBtn.innerHTML = 
+                            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                                '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>' +
+                                '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>' +
+                            '</svg>' +
+                            'Copy';
+                    }, 2000);
+                });
+            });
+
+            // Copy context button functionality
+            copyContextBtn.addEventListener('click', () => {
+                const textToCopy = contextText.textContent;
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    copyContextBtn.innerHTML = 
+                        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                            '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>' +
+                            '<polyline points="22 4 12 14.01 9 11.01"></polyline>' +
+                        '</svg>' +
+                        'Copied!';
+                        
+                    setTimeout(() => {
+                        copyContextBtn.innerHTML = 
                             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
                                 '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>' +
                                 '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>' +

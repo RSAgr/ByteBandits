@@ -74,7 +74,10 @@ except Exception as e:
 # === Build System Prompt and Full Prompt ===
 system_prompt = """You are a helpful AI coding assistant for Algorand (blockchain) that generates Python code. If anyone asks for anything apart from python code, simply deny with an apology message.
 When given an instruction, respond with only the code that implements it.
-Do not include any explanations or additional text.
+Do not include any explanations or additional text. 
+A statless contract must contain logic() and not approval_program or clear_state_program
+Mode.Signature should be used for stateless contracts
+Mode.Application should be used for Stateful contracts
 """
 
 # Add general examples to the system prompt
@@ -107,6 +110,7 @@ if not instruction.startswith('generate') and not instruction.startswith('write'
 
 # --- Context Injection ---
 context_examples_str = ""
+context_chunks = []
 if all_samples:
     matching_samples = find_matching_samples(instruction, all_samples, NUM_CONTEXT_SAMPLES)
     if matching_samples:
@@ -117,6 +121,11 @@ if all_samples:
             context_examples_str += f"Response:\n{sample.get('output', 'N/A')}\n"
             # if(i==0 or i==1):
             #     print(context_examples_str)
+            if i < 2:  # Store top two chunks
+                context_chunks.append({
+                    "instruction": sample.get("instruction", "N/A"),
+                    "output": sample.get("output", "N/A")
+                })
     else:
         print("No matching samples found for context injection.", file=sys.stderr)
 
@@ -144,7 +153,18 @@ try:
     match = re.search(r"```(?:[Pp]ython)?\s*([\s\S]+?)```", completion)
     if match:
         completion = match.group(1).strip()
-    json.dump({"response": completion}, sys.stdout)
+    context_display = ""
+    for i, chunk in enumerate(context_chunks[:2]):  # Only show top 2
+        context_display += f"=== Example {i+1} ===\n"
+        context_display += f"Instruction: {chunk['instruction']}\n"
+        context_display += f"Code:\n{chunk['output']}\n\n"
+
+    result = {
+        "response": completion,
+        "context_chunks": context_display.strip()  # Now a formatted string
+    }
+    json.dump(result, sys.stdout)
+    #json.dump({"response": completion}, sys.stdout)
 
 except Exception as e:
     error_msg = f"Inference error: {str(e)}"
