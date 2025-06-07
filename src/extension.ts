@@ -54,7 +54,7 @@ async function getDropdownSuggestions(prompt: string): Promise<string[]> {
 
 async function getInlineCompletion(prompt: string): Promise<string> {
     return new Promise((resolve) => {
-        const scriptPath = path.resolve(__dirname, '../inferenceLora.py');
+        const scriptPath = path.resolve(__dirname, '../inferenceGhost.py');
         const pyshell = new PythonShell(scriptPath, {
             mode: 'json',
             pythonPath: getPythonPath(),
@@ -137,7 +137,7 @@ export function callModel(prompt: string): Promise<string> {
 
         pyshell.on('message', (message) => {
             if (message.response) {
-                resolve(message.context_chunks);
+                resolve(message.response);
             } 
             else if (message.error) {
                 reject(new Error(message.error));
