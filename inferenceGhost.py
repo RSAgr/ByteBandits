@@ -73,7 +73,7 @@ except Exception as e:
 
 # === Build System Prompt and Full Prompt ===
 system_prompt = """
-you would be passed through incomplete code words (of algorand Pyteal Code). Give the next most probable characters or words or comment or all
+you would be passed through incomplete code words (of algorand Pyteal Code). Give the next most probable characters or words or comment
 """
 
 # Add general examples to the system prompt
