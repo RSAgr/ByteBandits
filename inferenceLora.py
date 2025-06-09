@@ -4,6 +4,12 @@ import os
 import google.generativeai as genai
 import re
 from dotenv import load_dotenv
+from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
+import numpy as np
+
+# Set default model globally
+DEFAULT_EMBEDDING_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Configure your API key
 load_dotenv()  # Load environment variables from .env file
@@ -21,7 +27,8 @@ genai.configure(api_key=GOOGLE_API_KEY)
 # Get the directory of the current script
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Use os.path.join to create a platform-independent path relative to the script
-SAMPLES_FILE = os.path.join(SCRIPT_DIR, "data", "samples.jsonl")
+#SAMPLES_FILE = os.path.join(SCRIPT_DIR, "data", "samples.jsonl")
+SAMPLES_FILE = os.path.join(SCRIPT_DIR, "data", "vector_samples.jsonl")
 NUM_CONTEXT_SAMPLES = 5  # Number of top matching samples to include as context
 
 def load_samples(filepath):
@@ -39,25 +46,86 @@ def load_samples(filepath):
                 print(f"Error decoding JSON from line: {line.strip()} - {e}", file=sys.stderr)
     return samples
 
-def find_matching_samples(user_instruction, samples, top_n=NUM_CONTEXT_SAMPLES):
-    """
-    Finds samples that are most relevant to the user's instruction.
-    This is a simple keyword-based matching. For more robust matching,
-    consider using embeddings and similarity search.
-    """
-    matches = []
-    user_instruction_lower = user_instruction.lower()
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
-    # Simple keyword matching: count shared words
-    for sample in samples:
-        sample_instruction_lower = sample.get("instruction", "").lower()
-        shared_words = set(user_instruction_lower.split()) & set(sample_instruction_lower.split())
-        score = len(shared_words)
-        if score > 0:
-            matches.append((score, sample))
+# def find_matching_samples(user_instruction, samples, model=DEFAULT_EMBEDDING_MODEL, top_n=5):
+#     """
+#     Finds the top-N samples most similar to the user's instruction
+#     using cosine similarity of precomputed embeddings.
+    
+#     `samples` must contain 'embedding' key.
+#     """
+#     # Step 1: Encode only the user instruction
+#     user_embedding = model.encode([user_instruction], normalize_embeddings=True)[0]
+#     user_embedding = np.array(user_embedding).reshape(1, -1)
 
-    matches.sort(key=lambda x: x[0], reverse=True)
-    return [sample for score, sample in matches[:top_n]]
+#     # Step 2: Load precomputed sample embeddings
+#     sample_embeddings = np.array([sample["embedding"] for sample in samples])
+
+#     # Step 3: Compute cosine similarities
+#     similarities = cosine_similarity(user_embedding, sample_embeddings)[0]
+
+#     # Step 4: Sort samples by similarity score
+#     ranked_samples = sorted(zip(similarities, samples), key=lambda x: x[0], reverse=True)
+
+#     return [sample for _, sample in ranked_samples[:top_n]]
+
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+
+def find_matching_samples(user_instruction, samples, model=DEFAULT_EMBEDDING_MODEL, top_n=5, threshold=0.4):
+    """
+    Finds the top-N samples most similar to the user's instruction
+    using cosine similarity of precomputed embeddings.
+
+    Only returns samples with similarity >= `threshold`.
+
+    Parameters:
+        user_instruction (str): The input prompt or query.
+        samples (list): List of dicts with 'embedding' keys.
+        model: SentenceTransformer or similar embedding model.
+        top_n (int): Max number of similar samples to return.
+        threshold (float): Minimum similarity score to accept a sample.
+    """
+    # Step 1: Encode only the user instruction
+    user_embedding = model.encode([user_instruction], normalize_embeddings=True)[0]
+    user_embedding = np.array(user_embedding).reshape(1, -1)
+
+    # Step 2: Load precomputed sample embeddings
+    sample_embeddings = np.array([sample["embedding"] for sample in samples])
+
+    # Step 3: Compute cosine similarities
+    similarities = cosine_similarity(user_embedding, sample_embeddings)[0]
+
+    # Step 4: Filter by threshold
+    filtered = [(sim, sample) for sim, sample in zip(similarities, samples) if sim >= threshold]
+
+    # Step 5: Sort and limit
+    ranked_samples = sorted(filtered, key=lambda x: x[0], reverse=True)
+
+    return [sample for _, sample in ranked_samples[:top_n]]
+
+
+# def find_matching_samples(user_instruction, samples, top_n=NUM_CONTEXT_SAMPLES):
+#     """
+#     Finds samples that are most relevant to the user's instruction.
+#     This is a simple keyword-based matching. For more robust matching,
+#     consider using embeddings and similarity search.
+#     """
+#     matches = []
+#     user_instruction_lower = user_instruction.lower()
+
+#     # Simple keyword matching: count shared words
+#     for sample in samples:
+#         sample_instruction_lower = sample.get("instruction", "").lower()
+#         shared_words = set(user_instruction_lower.split()) & set(sample_instruction_lower.split())
+#         score = len(shared_words)
+#         if score > 0:
+#             matches.append((score, sample))
+
+#     matches.sort(key=lambda x: x[0], reverse=True)
+#     return [sample for score, sample in matches[:top_n]]
 
 # Load all samples once
 all_samples = load_samples(SAMPLES_FILE)
@@ -75,7 +143,8 @@ except Exception as e:
 system_prompt = """You are a helpful AI coding assistant for Algorand (blockchain) that generates Python code. If anyone asks for anything apart from python code, simply deny with an apology message.
 When given an instruction, respond with only the code that implements it.
 Do not include any explanations or additional text. 
-A statless contract must contain logic() and not approval_program or clear_state_program
+A statless contract must contain logic() and not approval() or clear()
+A stateful contract must contain approve() and clear()
 Mode.Signature should be used for stateless contracts
 Mode.Application should be used for Stateful contracts
 """
@@ -112,7 +181,8 @@ if not instruction.startswith('generate') and not instruction.startswith('write'
 context_examples_str = ""
 context_chunks = []
 if all_samples:
-    matching_samples = find_matching_samples(instruction, all_samples, NUM_CONTEXT_SAMPLES)
+    matching_samples = find_matching_samples(instruction, all_samples,DEFAULT_EMBEDDING_MODEL, NUM_CONTEXT_SAMPLES)
+    #matching_samples = find_matching_samples(instruction, all_samples, NUM_CONTEXT_SAMPLES)
     if matching_samples:
         context_examples_str = "\n\nHere are some relevant examples:\n"
         for i, sample in enumerate(matching_samples):
