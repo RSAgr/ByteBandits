@@ -7,10 +7,7 @@ from transformers import (
     TrainingArguments,
     DataCollatorForLanguageModeling
 )
-print("z")
-from huggingface_hub import login
-login("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")
-print("g")
+
 from datasets import Dataset
 from peft import get_peft_model, LoraConfig, TaskType, PeftModel
 import json
@@ -53,7 +50,7 @@ else:
         lora_dropout=0.05,
     )
     model = get_peft_model(model, peft_config)
-print("d")
+
 model.print_trainable_parameters()
 
 # Freeze base model parameters, only LoRA params trainable
@@ -70,7 +67,7 @@ if num_trainable == 0:
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
-print("c")
+
 model.train()
 
 # Load dataset
@@ -112,7 +109,7 @@ else:
         fp16=False,
         push_to_hub=False,
     )
-    print("A")
+    
     # Trainer
     trainer = Trainer(
         model=model,
@@ -121,7 +118,7 @@ else:
         tokenizer=tokenizer,
         data_collator=DataCollatorForLanguageModeling(tokenizer, mlm=False),
     )
-    print("B")
+   
     trainer.train()
     trainer.save_model("./trainedModel")
     print("Model training complete and saved to ./trainedModel")
