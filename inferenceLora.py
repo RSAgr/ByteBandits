@@ -74,7 +74,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
-def find_matching_samples(user_instruction, samples, model=DEFAULT_EMBEDDING_MODEL, top_n=5, threshold=0.4):
+def find_matching_samples(user_instruction, samples, model=DEFAULT_EMBEDDING_MODEL, top_n=5, threshold=0.5):
     """
     Finds the top-N samples most similar to the user's instruction
     using cosine similarity of precomputed embeddings.
