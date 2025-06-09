@@ -7,18 +7,37 @@ from transformers import (
     TrainingArguments,
     DataCollatorForLanguageModeling
 )
+print("z")
+from huggingface_hub import login
+login("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")
+print("g")
 from datasets import Dataset
 from peft import get_peft_model, LoraConfig, TaskType, PeftModel
 import json
 
+os.makedirs("./trainedModel", exist_ok=True)
+
 # Load model and tokenizer
-model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+# model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+# model_name = "bigcode/starcoderbase-1b"
+# tokenizer = AutoTokenizer.from_pretrained(model_name)
+model_name = "Salesforce/codegen-350M-mono"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 tokenizer.pad_token = tokenizer.eos_token
-model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float32)
+
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+
+# model = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True)
+
+
+# tokenizer = AutoTokenizer.from_pretrained(model_name)
+# tokenizer.pad_token = tokenizer.eos_token
+# model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.float32)
+
 
 model.config.use_cache = False  # Disable cache for training
-
+print("e")
 # Setup PEFT (LoRA)
 peft_path = "./trainedModel"
 if os.path.exists(os.path.join(peft_path, "adapter_config.json")):
@@ -34,7 +53,7 @@ else:
         lora_dropout=0.05,
     )
     model = get_peft_model(model, peft_config)
-
+print("d")
 model.print_trainable_parameters()
 
 # Freeze base model parameters, only LoRA params trainable
@@ -51,7 +70,7 @@ if num_trainable == 0:
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
-
+print("c")
 model.train()
 
 # Load dataset
@@ -69,10 +88,10 @@ if not os.path.exists(sample_path):
     print("Sample data file not found")
 else:
     dataset = load_jsonl_dataset(sample_path)
-    dataset = dataset.select(range(0, 10))
+    dataset = dataset.select(range(0,10))
 
     def tokenize(example):
-        tokenized = tokenizer(example["text"], truncation=True, padding="max_length", max_length=256)
+        tokenized = tokenizer(example["text"], truncation=True, padding="max_length", max_length=128)
         tokenized["labels"] = tokenized["input_ids"].copy()
         return tokenized
 
@@ -83,17 +102,17 @@ else:
     training_args = TrainingArguments(
         output_dir="./trainedModel",
         per_device_train_batch_size=1,
-        num_train_epochs=10,
-        save_steps=99999999,
+        num_train_epochs=3,
+        save_steps=299,
         save_total_limit=2,
         learning_rate=1e-4,
         logging_dir="./logs",
-        logging_steps=1000,
+        logging_steps=100,
         gradient_checkpointing=False,  # Disable for debugging
         fp16=False,
         push_to_hub=False,
     )
-
+    print("A")
     # Trainer
     trainer = Trainer(
         model=model,
@@ -102,7 +121,7 @@ else:
         tokenizer=tokenizer,
         data_collator=DataCollatorForLanguageModeling(tokenizer, mlm=False),
     )
-
+    print("B")
     trainer.train()
     trainer.save_model("./trainedModel")
     print("Model training complete and saved to ./trainedModel")

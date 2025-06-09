@@ -1,5 +1,5 @@
 ---
-base_model: TinyLlama/TinyLlama-1.1B-Chat-v1.0
+base_model: Salesforce/codegen-350M-mono
 library_name: peft
 ---
 
@@ -199,4 +199,4 @@ Carbon emissions can be estimated using the [Machine Learning Impact calculator]
 [More Information Needed]
 ### Framework versions
 
-- PEFT 0.15.2
+- PEFT 0.15.1

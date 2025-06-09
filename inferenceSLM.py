@@ -15,7 +15,7 @@ from peft import PeftModel
 
 # === RAG SETUP ===
 SAMPLES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "samples.jsonl")
-NUM_CONTEXT_SAMPLES = 2
+NUM_CONTEXT_SAMPLES = 1
 
 def load_samples(filepath):
     samples = []
@@ -42,11 +42,18 @@ def find_matching_samples(user_instruction, samples, top_n=NUM_CONTEXT_SAMPLES):
     return [sample for _, sample in matches[:top_n]]
 
 # === SLM SETUP ===
-base_model = "EleutherAI/gpt-neo-125M"
-tokenizer = AutoTokenizer.from_pretrained(base_model)
-model = AutoModelForCausalLM.from_pretrained(base_model, torch_dtype=torch.float32)
+#base_model = "EleutherAI/gpt-neo-125M"
+# base_model = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+# tokenizer = AutoTokenizer.from_pretrained(base_model)
+# model = AutoModelForCausalLM.from_pretrained(base_model, torch_dtype=torch.float32)
 
-lora_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lora-output")
+model_name = "Salesforce/codegen-350M-mono"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+tokenizer.pad_token = tokenizer.eos_token
+
+model = AutoModelForCausalLM.from_pretrained(model_name)
+
+lora_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "trainedModel")
 model = PeftModel.from_pretrained(model, lora_path)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -69,6 +76,8 @@ if all_samples:
     matching_samples = find_matching_samples(prompt, all_samples, NUM_CONTEXT_SAMPLES)
     for i, sample in enumerate(matching_samples):
         context_examples_str += f"\nContext Example {i+1}:\nInstruction: {sample.get('instruction', '')}\nResponse:\n{sample.get('output', '')}\n"
+        # if i==0:
+        #     print(sample)
 
 # === Final Prompt for SLM ===
 system_prompt = "You are a helpful coding assistant. Provide only code for the following task."

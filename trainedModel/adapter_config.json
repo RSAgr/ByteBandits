@@ -1,7 +1,7 @@
 {
   "alpha_pattern": {},
   "auto_mapping": null,
-  "base_model_name_or_path": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+  "base_model_name_or_path": "Salesforce/codegen-350M-mono",
   "bias": "none",
   "corda_config": null,
   "eva_config": null,
@@ -24,8 +24,7 @@
   "rank_pattern": {},
   "revision": null,
   "target_modules": [
-    "v_proj",
-    "q_proj"
+    "qkv_proj"
   ],
   "task_type": "CAUSAL_LM",
   "trainable_token_indices": null,
