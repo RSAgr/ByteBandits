@@ -4,9 +4,15 @@ import os
 import google.generativeai as genai
 import re
 from dotenv import load_dotenv
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from sentence_transformers import SentenceTransformer
 
 # Configure your API key
 load_dotenv()  # Load environment variables from .env file
+
+DEFAULT_EMBEDDING_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
 
 GOOGLE_API_KEY = os.getenv("GEMINI_API_KEY")
 
@@ -21,7 +27,8 @@ genai.configure(api_key=GOOGLE_API_KEY)
 # Get the directory of the current script
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Use os.path.join to create a platform-independent path relative to the script
-SAMPLES_FILE = os.path.join(SCRIPT_DIR, "data", "samples.jsonl")
+# SAMPLES_FILE = os.path.join(SCRIPT_DIR, "data", "samples.jsonl")
+SAMPLES_FILE = os.path.join(SCRIPT_DIR, "data", "vector_samples.jsonl")
 NUM_CONTEXT_SAMPLES = 5  # Number of top matching samples to include as context
 
 def load_samples(filepath):
@@ -39,25 +46,57 @@ def load_samples(filepath):
                 print(f"Error decoding JSON from line: {line.strip()} - {e}", file=sys.stderr)
     return samples
 
-def find_matching_samples(user_instruction, samples, top_n=NUM_CONTEXT_SAMPLES):
+def find_matching_samples(user_instruction, samples, model=DEFAULT_EMBEDDING_MODEL, top_n=5, threshold=0.5):
     """
-    Finds samples that are most relevant to the user's instruction.
-    This is a simple keyword-based matching. For more robust matching,
-    consider using embeddings and similarity search.
+    Finds the top-N samples most similar to the user's instruction
+    using cosine similarity of precomputed embeddings.
+
+    Only returns samples with similarity >= `threshold`.
+
+    Parameters:
+        user_instruction (str): The input prompt or query.
+        samples (list): List of dicts with 'embedding' keys.
+        model: SentenceTransformer or similar embedding model.
+        top_n (int): Max number of similar samples to return.
+        threshold (float): Minimum similarity score to accept a sample.
     """
-    matches = []
-    user_instruction_lower = user_instruction.lower()
+    # Step 1: Encode only the user instruction
+    user_embedding = model.encode([user_instruction], normalize_embeddings=True)[0]
+    user_embedding = np.array(user_embedding).reshape(1, -1)
 
-    # Simple keyword matching: count shared words
-    for sample in samples:
-        sample_instruction_lower = sample.get("instruction", "").lower()
-        shared_words = set(user_instruction_lower.split()) & set(sample_instruction_lower.split())
-        score = len(shared_words)
-        if score > 0:
-            matches.append((score, sample))
+    # Step 2: Load precomputed sample embeddings
+    sample_embeddings = np.array([sample["embedding"] for sample in samples])
 
-    matches.sort(key=lambda x: x[0], reverse=True)
-    return [sample for score, sample in matches[:top_n]]
+    # Step 3: Compute cosine similarities
+    similarities = cosine_similarity(user_embedding, sample_embeddings)[0]
+
+    # Step 4: Filter by threshold
+    filtered = [(sim, sample) for sim, sample in zip(similarities, samples) if sim >= threshold]
+
+    # Step 5: Sort and limit
+    ranked_samples = sorted(filtered, key=lambda x: x[0], reverse=True)
+
+    return [sample for _, sample in ranked_samples[:top_n]]
+
+# def find_matching_samples(user_instruction, samples, top_n=NUM_CONTEXT_SAMPLES):
+#     """
+#     Finds samples that are most relevant to the user's instruction.
+#     This is a simple keyword-based matching. For more robust matching,
+#     consider using embeddings and similarity search.
+#     """
+#     matches = []
+#     user_instruction_lower = user_instruction.lower()
+
+#     # Simple keyword matching: count shared words
+#     for sample in samples:
+#         sample_instruction_lower = sample.get("instruction", "").lower()
+#         shared_words = set(user_instruction_lower.split()) & set(sample_instruction_lower.split())
+#         score = len(shared_words)
+#         if score > 0:
+#             matches.append((score, sample))
+
+#     matches.sort(key=lambda x: x[0], reverse=True)
+#     return [sample for score, sample in matches[:top_n]]
 
 # Load all samples once
 all_samples = load_samples(SAMPLES_FILE)
@@ -72,9 +111,14 @@ except Exception as e:
     sys.exit(1)
 
 # === Build System Prompt and Full Prompt ===
+# system_prompt = """
+# you would be passed through incomplete code words (of algorand Pyteal Code). Give the next most probable characters or words or comment
+# """
 system_prompt = """
-you would be passed through incomplete code words (of algorand Pyteal Code). Give the next most probable characters or words or comment
+You are an AI assistant trained to complete partially written Algorand PyTeal code. 
+Given an incomplete code snippet, suggest the most likely next characters, keywords, or comments.
 """
+
 
 # Add general examples to the system prompt
 general_examples = """Example 1:
@@ -90,7 +134,7 @@ import *
 Example 3:
 Instruction: return
 Response:
-Return(Int(1))
+(Int(1))
 """
 
 instruction = prompt.lower().strip()
@@ -100,7 +144,7 @@ if not instruction.startswith('generate') and not instruction.startswith('write'
 # --- Context Injection ---
 context_examples_str = ""
 if all_samples:
-    matching_samples = find_matching_samples(instruction, all_samples, NUM_CONTEXT_SAMPLES)
+    matching_samples = find_matching_samples(instruction, all_samples, DEFAULT_EMBEDDING_MODEL, NUM_CONTEXT_SAMPLES)
     if matching_samples:
         context_examples_str = "\n\nHere are some code examples you might want for context:\n"
         for i, sample in enumerate(matching_samples):
