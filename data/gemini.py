@@ -45,9 +45,9 @@ with open(input_path, "r" , encoding="utf-8") as f:
 
 for line in tqdm(lines):
     i += 1
-    if i < 1050:
+    if i <= 1600:
         continue
-    if i > 1100:
+    if i > 2100:
         break
     record = json.loads(line)
     output = record.get("output")
