@@ -1,7 +1,12 @@
 # ByteBandits - Algorand Smart Contract Assistant
 
-ByteBandits is a VS Code extension that enhances Algorand smart contract development with AI-powered assistance. It helps developers create, edit, and deploy smart contracts more efficiently on the Algorand blockchain.
+ByteBandits is a VS Code extension that enhances Algorand smart contract development with AI-powered assistance. It helps developers create, edit, and deploy smart contracts more efficiently on the Algorand blockchain. We are offering two versions of our extension : 
+- LLM based (ideal for small users since the call is made through API)
+- SLM based (ideal for organizations wanting full privacy over model calls)
 
+Refer to this presentation for a better understanding of the project : [Canva Link](https://www.canva.com/design/DAGpI6Uph7w/Lh5caAVq_RUpfJLE3NIzIA/edit)
+Refer to this video for the live demo : [Youtube Link](https://youtu.be/e8IfH2FDAbw?si=VRnxti8MqT8Us8P4)
+   
 ## ✨ Features
 
 ### Smart Contract Generation
@@ -22,8 +27,14 @@ ByteBandits is a VS Code extension that enhances Algorand smart contract develop
 ### Development Tools
 - **AI-Powered Code Completion**: Get intelligent code suggestions as you type
 - **Inline Documentation**: Automatic generation of docstrings and documentation
-- **Gas Fee Estimation**: Estimate transaction costs before deployment
 - **Code Improvement Suggestions**: AI-powered code optimization recommendations
+
+### Difference from other AI
+- No Hallucinations due to RAG
+- Cosine Similarity to log down relevent examples from the community
+- Can be modified to have LLM as a fallback for SLM
+- Retry option with prompt and code passed as context
+- Direct Deployment options
 
 ### Supported Languages
 - Primary language: Python (PyTeal)
@@ -56,7 +67,7 @@ ByteBandits is a VS Code extension that enhances Algorand smart contract develop
    pip install -r requirements.txt
    ```
 
-4. Set your Google API key in a `.env` file:
+4. Set your Google API key in a `.env` file (if using LLM based):
    ```
    GEMINI_API_KEY=your_api_key_here
    ```
@@ -116,10 +127,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - Built with [VS Code Extension API](https://code.visualstudio.com/api)
-- Powered by Google's Generative AI
+- Powered by Google's Generative AI and Salesforce's Codegen Model 
 - Part of the Algorand Developer Ecosystem
 
 ---
 
-Made with ❤️ for the Algorand community
+Made with ❤️ for organizaton specific AI assistance
 
