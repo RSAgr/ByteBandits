@@ -6,6 +6,12 @@ AlgoMate is a VS Code extension that enhances Algorand smart contract developmen
 
 Refer to this presentation for a better understanding of the project : [Canva Link](https://www.canva.com/design/DAGpI6Uph7w/Lh5caAVq_RUpfJLE3NIzIA/edit)
 Refer to this video for the live demo : [Youtube Link](https://youtu.be/e8IfH2FDAbw?si=VRnxti8MqT8Us8P4)
+
+## 🏆 Recognition
+
+- 🌟 Featured on the official Algorand website.
+- 🚀 Open-source project built for the Algorand developer ecosystem.
+- 🤝 Contributions, issues, and feature requests are welcome from the community.
    
 ## ✨ Features
 
