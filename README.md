@@ -7,13 +7,13 @@ AlgoMate is a VS Code extension that enhances Algorand smart contract developmen
 Refer to this presentation for a better understanding of the project : [Canva Link](https://www.canva.com/design/DAGpI6Uph7w/Lh5caAVq_RUpfJLE3NIzIA/edit)
 Refer to this video for the live demo : [Youtube Link](https://youtu.be/e8IfH2FDAbw?si=VRnxti8MqT8Us8P4)
 
-## 🏆 Recognition
+## Recognition
 
-- 🌟 Featured on the official Algorand website.
-- 🚀 Open-source project built for the Algorand developer ecosystem.
-- 🤝 Contributions, issues, and feature requests are welcome from the community.
+- Featured on the official Algorand website.
+- Open-source project built for the Algorand developer ecosystem.
+- Contributions, issues, and feature requests are welcome from the community.
    
-## ✨ Features
+## Features
 
 ### Smart Contract Generation
 - **Purpose-based Templates**: Generate contracts for various use cases:
@@ -46,7 +46,7 @@ Refer to this video for the live demo : [Youtube Link](https://youtu.be/e8IfH2FD
 - Primary language: Python (PyTeal)
 - Clean and readable code generation
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js (v14+)
@@ -111,7 +111,7 @@ Refer to this video for the live demo : [Youtube Link](https://youtu.be/e8IfH2FD
 - Get suggestions for optimizing your smart contract code
 - Security best practices for Algorand development
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 ByteBandits/
@@ -126,11 +126,11 @@ ByteBandits/
 └── README.md
 ```
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Built with [VS Code Extension API](https://code.visualstudio.com/api)
 - Powered by Google's Generative AI and Salesforce's Codegen Model 
