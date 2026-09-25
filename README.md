@@ -78,6 +78,73 @@ Refer to this video for the live demo : [Youtube Link](https://youtu.be/e8IfH2FD
    GEMINI_API_KEY=your_api_key_here
    ```
 
+### PostgreSQL vector store (Docker)
+
+The RAG dataset is stored in one PostgreSQL table, `instruction_documents`.
+It contains `instruction`, a 384-dimension `instruction_embedding`, `code`, and
+`metadata` (`JSONB`). Source fields such as `github_url`, `website_url`,
+`file_path`, repository name, or any other JSONL fields are retained in
+`metadata`.
+
+1. Copy `.env.example` to `.env` and set a local database password.
+2. Build and start PostgreSQL with pgvector (the image is built locally from
+   PostgreSQL's official image for reliable Windows Docker Desktop support):
+   ```bash
+   docker compose up -d
+   ```
+3. Install the PostgreSQL importer dependencies, then import and embed the dataset:
+   ```bash
+   pip install -r requirements-postgres.txt
+   python data/load_embeddings_to_postgres.py --input data/samples.jsonl
+   ```
+
+Use a supported Python version for the selected packages. The legacy
+`requirements.txt` includes older training dependencies and is not compatible
+with Python 3.14; create the importer environment with Python 3.11 or 3.12 if
+the latest `sentence-transformers`/PyTorch wheels are unavailable for your
+machine.
+
+### MCP knowledge search
+
+The repository also exposes the PostgreSQL knowledge base to MCP-compatible
+AI clients. The `search_algorand_knowledge(query, top_k)` tool combines
+PostgreSQL full-text ranking with cosine similarity over the existing
+pgvector embeddings, then returns the matching instruction, code, metadata,
+and scores. The model or client uses those returned sources to produce its
+answer; the MCP server does not call an LLM.
+
+Install the MCP/RAG dependencies in the same Python environment used by the
+PostgreSQL database setup, and ensure the database is running and populated:
+
+```bash
+pip install -r requirements-mcp.txt
+python mcp_server.py
+```
+
+The server uses MCP stdio transport and the `POSTGRES_*` variables from `.env`.
+Example client configuration (adjust the Python path to your environment):
+
+```json
+{
+  "mcpServers": {
+    "algorand-knowledge": {
+      "command": "D:/path/to/ByteBandits/.venv-pg/Scripts/python.exe",
+      "args": ["D:/path/to/ByteBandits/mcp_server.py"]
+    }
+  }
+}
+```
+
+The first search downloads/loads `all-MiniLM-L6-v2`, the same model used during
+ingestion. `top_k` must be between 1 and 20.
+
+The loader is idempotent: importing the same instruction/code pair updates its
+embedding and metadata instead of duplicating it. To inspect the data:
+
+```bash
+docker compose exec postgres psql -U algomate -d algomate -c "SELECT id, instruction, metadata FROM instruction_documents LIMIT 5;"
+```
+
 5. Build and run the extension in VS Code:
    - Press `F5` to open a new VS Code window with the extension loaded
    - Or use the command palette: `Developer: Run Extension`

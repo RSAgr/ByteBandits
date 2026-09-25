@@ -45,6 +45,9 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Docker database data is intentionally local-only.
+postgres_data/
+
 # System Files
 .DS_Store
 Thumbs.db
